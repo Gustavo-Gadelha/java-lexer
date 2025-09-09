@@ -1,6 +1,8 @@
 package edu.fafic.automata;
 
-public enum States {
+import edu.fafic.lexer.Lexer;
+
+public enum States implements State {
     INITIAL,
     FINAL,
     SYMBOL,
@@ -14,5 +16,15 @@ public enum States {
     RELATIONAL,
     PUNCTUATION,
     INVALID,
-    EOF,
+    EOF {
+        @Override
+        public State accept(Lexer lexer, int input) {
+            return FINAL;
+        }
+    };
+
+    @Override
+    public State accept(Lexer lexer, int input) {
+        return INVALID;
+    }
 }
