@@ -1,4 +1,4 @@
-package edu.fafic.exceptions;
+package edu.fafic.exception;
 
 public final class LexicalException extends RuntimeException {
 
@@ -9,7 +9,7 @@ public final class LexicalException extends RuntimeException {
     public static LexicalException unexpected(int codePoint, CharSequence buffer) {
         String message = String.format(
                 "Lexical error: unexpected %s%n" +
-                "current lexeme: [%s]",
+                        "current lexeme: [%s]",
                 asString(codePoint), buffer.toString()
         );
 
