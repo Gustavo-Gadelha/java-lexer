@@ -205,10 +205,11 @@ public enum States implements State {
 
     RELATIONAL, // TODO: Implementar reconhecimento de operadores relacionais
 
-    ARITHMETIC { // TODO: Extremamente simples, não lê mais de 1 simbolo
+    ARITHMETIC { // TODO: Extremamente simples, não lê mais de 1 símbolo
 
         @Override
         public State accept(StateContext ctx, int ch) {
+            ctx.unread(ch); // TODO: Só permite o reconhecimento de 1 símbolo
             String lexeme = ctx.currentLexeme();
             Category category = Token.arithmetic.get(lexeme);
             Token token = new Token(category, lexeme);
