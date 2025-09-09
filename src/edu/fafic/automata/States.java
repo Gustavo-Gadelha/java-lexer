@@ -174,26 +174,27 @@ public enum States implements State {
 
     COMMENT, // TODO: Implementar reconhecimento de comentários
 
-    STRING_LITERAL_START {
+    STRING_LITERAL_START { // TODO: Não permite escape de caracteres
+
         @Override
         public State accept(StateContext ctx, int ch) {
-            if (Alphabet.isLetterOrDigit(ch) || Alphabet.isUnderline(ch) || Alphabet.isWhitespace(ch)) {
-                ctx.append(ch);
-                return STRING_LITERAL_START;
+            if (Symbols.isEOF(ch)) {
+                return INVALID; // Todos os caracteres foram lidos e um " não foi encontrada
             }
             if (Alphabet.isDoubleQuotes(ch)) {
-                ctx.unread(ch); // will be consumed by the next state
+                ctx.unread(ch); // Será consumido no próximo estado
                 return STRING_LITERAL_END;
             }
 
-            return INVALID;
+            ctx.append(ch);
+            return STRING_LITERAL_START;
         }
     },
 
     STRING_LITERAL_END {
         @Override
         public State accept(StateContext ctx, int ch) {
-            ctx.append(ch); // appends " to the buffer
+            ctx.append(ch); // Concatena " ao buffer
             Token token = new Token(Category.STRING_LITERAL, ctx.currentLexeme());
             ctx.emit(token);
             return FINAL;
@@ -257,7 +258,7 @@ public enum States implements State {
     INVALID {
         @Override
         public State accept(StateContext ctx, int ch) {
-            // Todo: Implementar um log de erros mais detalhado com LexicalException
+            // TODO: Implementar um log de erros mais detalhado com LexicalException
             throw new RuntimeException("O analisador léxico chegou em um estado inválido");
         }
     };
