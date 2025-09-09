@@ -13,7 +13,7 @@ public enum States implements State {
                 return INITIAL;
             }
 
-            if (ch == -1) {
+            if (Symbols.isEOF(ch)) {
                 return EOF;
             }
             if (Alphabet.isLetter(ch) || Alphabet.isUnderline(ch)) {
