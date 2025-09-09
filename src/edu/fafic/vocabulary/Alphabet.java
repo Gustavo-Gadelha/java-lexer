@@ -29,4 +29,8 @@ public class Alphabet {
     public static boolean isDot(int symbol) {
         return symbol == '.';
     }
+
+    public static boolean isDoubleQuotes(int symbol) {
+        return symbol == '"';
+    }
 }
