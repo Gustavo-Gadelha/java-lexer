@@ -172,6 +172,8 @@ public enum States implements State {
         }
     },
 
+    COMMENT, // TODO: Implementar reconhecimento de comentários
+
     STRING_LITERAL_START {
         @Override
         public State accept(StateContext ctx, int ch) {
@@ -202,7 +204,8 @@ public enum States implements State {
 
     RELATIONAL, // TODO: Implementar reconhecimento de operadores relacionais
 
-    ARITHMETIC {
+    ARITHMETIC { // TODO: Extremamente simples, não lê mais de 1 simbolo
+
         @Override
         public State accept(StateContext ctx, int ch) {
             String lexeme = ctx.currentLexeme();
@@ -218,7 +221,8 @@ public enum States implements State {
         }
     },
 
-    PUNCTUATION {
+    PUNCTUATION { // TODO: Extremamente simples, talvez não funcione para todos os casos
+
         @Override
         public State accept(StateContext ctx, int ch) {
             if (Symbols.isPunctuation(ch)) {
@@ -253,6 +257,7 @@ public enum States implements State {
     INVALID {
         @Override
         public State accept(StateContext ctx, int ch) {
+            // Todo: Implementar um log de erros mais detalhado com LexicalException
             throw new RuntimeException("O analisador léxico chegou em um estado inválido");
         }
     };
