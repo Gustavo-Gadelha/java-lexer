@@ -28,6 +28,10 @@ public class Symbols {
         return symbol == ASSIGNMENT;
     }
 
+    public static boolean isArithmetic(int symbol) {
+        return Symbols.arithmetic.contains((char) symbol);
+    }
+
     public static boolean isLogical(int symbol) {
         return Symbols.logical.contains((char) symbol);
     }
