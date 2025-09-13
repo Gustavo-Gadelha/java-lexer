@@ -26,10 +26,6 @@ public class Lexer {
         this.lookahead = new Lookahead();
     }
 
-    public void saveToken(Token token) {
-        this.tokens.add(token);
-    }
-
     public int read() {
         try {
             return lookahead.isEmpty() ? reader.read() : lookahead.consume();
@@ -40,7 +36,7 @@ public class Lexer {
 
     public Token readToken() {
         State current = States.INITIAL;
-        StateContext ctx = new StateContext(this.buffer, this.lookahead, this::saveToken);
+        final StateContext ctx = new StateContext(this.buffer, this.lookahead, this.tokens::add);
 
         do {
             int ch = this.read();
