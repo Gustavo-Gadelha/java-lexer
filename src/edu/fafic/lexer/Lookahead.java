@@ -35,4 +35,9 @@ public class Lookahead {
     public void clear() {
         this.lookahead = NO_CHAR;
     }
+
+    @Override
+    public String toString() {
+        return "Lookahead(%s)".formatted(this.lookahead);
+    }
 }

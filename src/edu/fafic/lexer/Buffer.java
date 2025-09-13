@@ -37,4 +37,9 @@ public class Buffer {
     public void clear() {
         this.buffer.setLength(0);
     }
+
+    @Override
+    public String toString() {
+        return "Buffer(%s)".formatted(this.buffer.toString());
+    }
 }
