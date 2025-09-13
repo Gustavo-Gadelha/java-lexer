@@ -1,24 +1,40 @@
 package edu.fafic.automata;
 
+import edu.fafic.token.Token;
+import edu.fafic.token.Type;
 import edu.fafic.vocabulary.Alphabet;
-import edu.fafic.vocabulary.Category;
 import edu.fafic.vocabulary.Symbols;
-import edu.fafic.vocabulary.Token;
 
 public enum States implements State {
     INITIAL {
         @Override
         public State accept(StateContext ctx, int ch) {
+            if (Symbols.isEOF(ch)) {
+                return EOF;
+            }
             if (Alphabet.isWhitespace(ch)) {
                 return INITIAL;
             }
 
-            if (Symbols.isEOF(ch)) {
-                return EOF;
+            if (Symbols.isArithmetic(ch)) {
+                ctx.append(ch);
+                return ARITHMETIC;
             }
-            if (Alphabet.isLetter(ch) || Alphabet.isUnderline(ch)) {
+            if (Symbols.isPunctuation(ch)) {
+                ctx.append(ch);
+                return PUNCTUATION;
+            }
+            if (Symbols.isAssignment(ch)) {
+                ctx.append(ch);
+                return ASSIGNMENT;
+            }
+            if (Alphabet.isLetter(ch)) {
                 ctx.append(ch);
                 return KEYWORD_OR_IDENTIFIER;
+            }
+            if (Alphabet.isUnderline(ch)) {
+                ctx.append(ch);
+                return IDENTIFIER;
             }
             if (Alphabet.isDigit(ch)) {
                 ctx.append(ch);
@@ -28,26 +44,13 @@ public enum States implements State {
                 ctx.append(ch);
                 return STRING_LITERAL_START;
             }
-            if (Symbols.arithmetic.contains((char) ch)) {
+            if (Symbols.isLogical(ch)) {
                 ctx.append(ch);
-                return ARITHMETIC;
+                return LOGICAL_SINGLE;
             }
-            if (Symbols.logical.contains((char) ch)) {
+            if (Symbols.isRelational(ch)) {
                 ctx.append(ch);
-                return LOGICAL;
-            }
-            if (Symbols.relational.contains((char) ch)) {
-                ctx.append(ch);
-                return RELATIONAL;
-            }
-
-            if (Symbols.punctuation.contains((char) ch)) {
-                ctx.unread(ch);
-                return PUNCTUATION;
-            }
-            if (Symbols.isAssignment(ch)) {
-                ctx.unread(ch);
-                return ASSIGNMENT;
+                return RELATIONAL_SINGLE;
             }
 
             return INVALID;
@@ -57,7 +60,13 @@ public enum States implements State {
     ASSIGNMENT {
         @Override
         public State accept(StateContext ctx, int ch) {
-            ctx.emit(new Token(Category.AS, ch));
+            if (ch == '=') {
+                ctx.append(ch);
+                return RELATIONAL_DOUBLE;
+            }
+
+            ctx.unread(ch);
+            ctx.emit(new Token(Type.AS, ctx.currentLexeme()));
             return FINAL;
         }
     },
@@ -75,10 +84,10 @@ public enum States implements State {
             }
 
             String lexeme = ctx.currentLexeme();
-            Category category = Token.keywords.getOrDefault(lexeme, Category.ID);
-            Token token = new Token(category, lexeme);
+            Type type = Symbols.isKeyword(lexeme) ? Type.KEYWORD : Type.ID;
+            Token token = new Token(type, lexeme);
 
-            if (Symbols.punctuation.contains((char) ch)) {
+            if (Symbols.isPunctuation(ch)) {
                 ctx.unread(ch);
                 ctx.emit(token);
                 return FINAL;
@@ -101,9 +110,9 @@ public enum States implements State {
             }
 
             String lexeme = ctx.currentLexeme();
-            Token token = new Token(Category.ID, lexeme);
+            Token token = new Token(Type.ID, lexeme);
 
-            if (Symbols.punctuation.contains((char) ch)) {
+            if (Symbols.isPunctuation(ch)) {
                 ctx.unread(ch);
                 ctx.emit(token);
                 return FINAL;
@@ -131,7 +140,7 @@ public enum States implements State {
             }
 
             String lexeme = ctx.currentLexeme();
-            Token token = new Token(Category.INTEGER_LITERAL, lexeme);
+            Token token = new Token(Type.INTEGER_LITERAL, lexeme);
 
             if (Symbols.isEOL(ch)) {
                 ctx.unread(ch);
@@ -156,7 +165,7 @@ public enum States implements State {
             }
 
             String lexeme = ctx.currentLexeme();
-            Token token = new Token(Category.FLOAT_LITERAL, lexeme);
+            Token token = new Token(Type.FLOAT_LITERAL, lexeme);
 
             if (Symbols.isEOL(ch)) {
                 ctx.unread(ch);
@@ -172,7 +181,55 @@ public enum States implements State {
         }
     },
 
-    COMMENT, // TODO: Implementar reconhecimento de comentários
+    COMMENT {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            if (Alphabet.isLineSeparator(ch) || Symbols.isEOL(ch)) {
+                if (Symbols.isEOL(ch)) ctx.unread(ch);
+
+                Token token = new Token(Type.COMMENT, ctx.currentLexeme());
+                ctx.emit(token);
+                return FINAL;
+            }
+
+            ctx.append(ch);
+            return COMMENT;
+        }
+    },
+
+    BLOCK_COMMENT {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            if (Symbols.isEOF(ch)) {
+                return INVALID;
+            }
+            if (ch == '*') {
+                ctx.append(ch);
+                return BLOCK_COMMENT_END;
+            }
+
+            ctx.append(ch);
+            return BLOCK_COMMENT;
+        }
+    },
+
+    BLOCK_COMMENT_END {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            if (Symbols.isEOF(ch)) {
+                return INVALID;
+            }
+            if (ch == '/') {
+                ctx.append(ch);
+                Token token = new Token(Type.COMMENT, ctx.currentLexeme());
+                ctx.emit(token);
+                return FINAL;
+            }
+
+            ctx.append(ch);
+            return BLOCK_COMMENT;
+        }
+    },
 
     STRING_LITERAL_START { // TODO: Não permite escape de caracteres
 
@@ -195,43 +252,24 @@ public enum States implements State {
         @Override
         public State accept(StateContext ctx, int ch) {
             ctx.append(ch); // Concatena " ao buffer
-            Token token = new Token(Category.STRING_LITERAL, ctx.currentLexeme());
+            Token token = new Token(Type.STRING_LITERAL, ctx.currentLexeme());
             ctx.emit(token);
             return FINAL;
         }
     },
 
-    LOGICAL, // TODO: Implementar reconhecimento de operadores lógicos
-
-    RELATIONAL, // TODO: Implementar reconhecimento de operadores relacionais
-
-    ARITHMETIC { // TODO: Extremamente simples, não lê mais de 1 símbolo
-
+    LOGICAL_SINGLE {
         @Override
         public State accept(StateContext ctx, int ch) {
-            ctx.unread(ch); // TODO: Só permite o reconhecimento de 1 símbolo
-            String lexeme = ctx.currentLexeme();
-            Category category = Token.arithmetic.get(lexeme);
-            Token token = new Token(category, lexeme);
-
-            if (Symbols.isArithmetic(ch)) {
-                ctx.emit(token);
-                return FINAL;
-            }
-
-            return INVALID;
-        }
-    },
-
-    PUNCTUATION { // TODO: Extremamente simples, talvez não funcione para todos os casos
-
-        @Override
-        public State accept(StateContext ctx, int ch) {
-            if (Symbols.isPunctuation(ch)) {
+            if (Symbols.isLogical(ch)) {
                 ctx.append(ch);
-                String lexeme = ctx.currentLexeme();
-                Category category = Token.punctuation.get(lexeme);
-                Token token = new Token(category, lexeme);
+                return LOGICAL_DOUBLE;
+            }
+
+            String lexeme = ctx.currentLexeme();
+            if (Symbols.isLogical(lexeme)) {
+                ctx.unread(ch);
+                Token token = new Token(Type.LOGICAL, lexeme);
                 ctx.emit(token);
                 return FINAL;
             }
@@ -239,11 +277,89 @@ public enum States implements State {
             return INVALID;
         }
     },
+
+    LOGICAL_DOUBLE {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            String lexeme = ctx.currentLexeme();
+            if (Symbols.isLogical(lexeme)) {
+                ctx.unread(ch);
+                Token token = new Token(Type.LOGICAL, lexeme);
+                ctx.emit(token);
+                return FINAL;
+            }
+
+            return INVALID;
+        }
+    },
+
+    RELATIONAL_SINGLE {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            if (Symbols.isRelational(ch)) {
+                ctx.append(ch);
+                return RELATIONAL_DOUBLE;
+            }
+
+            ctx.unread(ch);
+            Token token = new Token(Type.RELATIONAL, ctx.currentLexeme());
+            ctx.emit(token);
+            return FINAL;
+        }
+    },
+
+    RELATIONAL_DOUBLE {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            String lexeme = ctx.currentLexeme();
+            if (Symbols.isRelational(lexeme)) {
+                ctx.unread(ch);
+                Token token = new Token(Type.RELATIONAL, lexeme);
+                ctx.emit(token);
+                return FINAL;
+            }
+
+            return INVALID;
+        }
+    },
+
+    ARITHMETIC {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            if (Symbols.isAssignment(ch)) {
+                ctx.append(ch);
+                return ASSIGNMENT;
+            }
+            if (ch == '/') {
+                ctx.append(ch);
+                return COMMENT;
+            }
+            if (ch == '*') {
+                ctx.append(ch);
+                return BLOCK_COMMENT;
+            }
+
+            ctx.unread(ch);
+            Token token = new Token(Type.ARITHMETIC, ctx.currentLexeme());
+            ctx.emit(token);
+            return FINAL;
+        }
+    }, // TODO: Extremamente simples, não lê mais de 1 símbolo
+
+    PUNCTUATION {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            ctx.unread(ch);
+            Token token = new Token(Type.PUNCTUATION, ctx.currentLexeme());
+            ctx.emit(token);
+            return FINAL;
+        }
+    }, // TODO: Extremamente simples, talvez não funcione para todos os casos
 
     EOF {
         @Override
         public State accept(StateContext ctx, int ch) {
-            Token token = new Token(Category.EOF, "EOF");
+            Token token = new Token(Type.EOF, "EOF");
             ctx.emit(token);
             return FINAL;
         }
