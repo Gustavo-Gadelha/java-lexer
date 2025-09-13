@@ -3,7 +3,7 @@ package edu.fafic.lexer;
 import edu.fafic.automata.State;
 import edu.fafic.automata.StateContext;
 import edu.fafic.automata.States;
-import edu.fafic.vocabulary.Token;
+import edu.fafic.token.Token;
 
 import java.io.BufferedReader;
 import java.io.IOException;

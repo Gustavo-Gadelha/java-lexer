@@ -1,7 +1,7 @@
 package edu.fafic;
 
 import edu.fafic.lexer.Lexer;
-import edu.fafic.vocabulary.Token;
+import edu.fafic.token.Token;
 
 import java.io.FileInputStream;
 import java.io.IOException;

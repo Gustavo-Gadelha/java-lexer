@@ -2,7 +2,7 @@ package edu.fafic.automata;
 
 import edu.fafic.lexer.Buffer;
 import edu.fafic.lexer.Lookahead;
-import edu.fafic.vocabulary.Token;
+import edu.fafic.token.Token;
 
 import java.util.function.Consumer;
 
