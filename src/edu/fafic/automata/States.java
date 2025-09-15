@@ -37,7 +37,7 @@ public enum States implements State {
             }
             if (Alphabet.isDoubleQuotes(ch)) {
                 ctx.append(ch);
-                return STRING_LITERAL_START;
+                return STRING_LITERAL;
             }
             if (Symbols.isLogical(ch)) {
                 ctx.append(ch);
@@ -187,29 +187,20 @@ public enum States implements State {
         }
     },
 
-    STRING_LITERAL_START { // TODO: Não permite escape de caracteres
-
+    STRING_LITERAL {
         @Override
         public State accept(StateContext ctx, int ch) {
-            if (Symbols.isEOF(ch)) {
-                return INVALID; // Todos os caracteres foram lidos e um " não foi encontrada
-            }
             if (Alphabet.isDoubleQuotes(ch)) {
-                ctx.unread(ch); // Será consumido no próximo estado
-                return STRING_LITERAL_END;
+                ctx.append(ch);
+                ctx.emit(Type.STRING_LITERAL);
+                return FINAL;
+            }
+            if (Symbols.isEOF(ch)) {
+                return INVALID;
             }
 
             ctx.append(ch);
-            return STRING_LITERAL_START;
-        }
-    },
-
-    STRING_LITERAL_END {
-        @Override
-        public State accept(StateContext ctx, int ch) {
-            ctx.append(ch); // Concatena " ao buffer
-            ctx.emit(Type.STRING_LITERAL);
-            return FINAL;
+            return STRING_LITERAL;
         }
     },
 
