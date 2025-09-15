@@ -37,7 +37,7 @@ public enum States implements State {
             }
             if (Symbols.isLogical(ch)) {
                 ctx.append(ch);
-                return LOGICAL_SINGLE;
+                return LOGICAL;
             }
             if (Symbols.isRelational(ch)) {
                 ctx.append(ch);
@@ -205,36 +205,17 @@ public enum States implements State {
         }
     },
 
-    LOGICAL_SINGLE {
+    LOGICAL {
         @Override
         public State accept(StateContext ctx, int ch) {
-            if (Symbols.isLogical(ch)) {
+            if (ch == '&' || ch == '|') {
                 ctx.append(ch);
-                return LOGICAL_DOUBLE;
-            }
-
-            String lexeme = ctx.currentLexeme();
-            if (Symbols.isLogical(lexeme)) {
+            } else {
                 ctx.unread(ch);
-                ctx.emit(Type.LOGICAL);
-                return FINAL;
             }
 
-            return INVALID;
-        }
-    },
-
-    LOGICAL_DOUBLE {
-        @Override
-        public State accept(StateContext ctx, int ch) {
-            String lexeme = ctx.currentLexeme();
-            if (Symbols.isLogical(lexeme)) {
-                ctx.unread(ch);
-                ctx.emit(Type.LOGICAL);
-                return FINAL;
-            }
-
-            return INVALID;
+            ctx.emit(Type.LOGICAL);
+            return FINAL;
         }
     },
 
