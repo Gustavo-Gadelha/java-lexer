@@ -324,7 +324,7 @@ public enum States implements State {
             ctx.emit(Type.ARITHMETIC);
             return FINAL;
         }
-    }, // TODO: Extremamente simples, não lê mais de 1 símbolo
+    },
 
     PUNCTUATION {
         @Override
@@ -333,7 +333,7 @@ public enum States implements State {
             ctx.emit(Type.PUNCTUATION);
             return FINAL;
         }
-    }, // TODO: Extremamente simples, talvez não funcione para todos os casos
+    },
 
     EOF {
         @Override
