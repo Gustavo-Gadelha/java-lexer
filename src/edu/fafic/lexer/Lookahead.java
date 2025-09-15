@@ -18,7 +18,7 @@ public class Lookahead {
         this.lookahead = reading;
     }
 
-    public int peek() {
+    public int read() {
         return lookahead;
     }
 

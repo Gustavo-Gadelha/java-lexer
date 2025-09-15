@@ -12,10 +12,6 @@ public class Buffer {
         this.buffer.appendCodePoint(codePoint);
     }
 
-    public void append(Character character) {
-        this.buffer.append(character);
-    }
-
     public int first() {
         return this.buffer.codePointAt(0);
     }
@@ -26,12 +22,6 @@ public class Buffer {
 
     public String read() {
         return this.buffer.toString();
-    }
-
-    public String consume() {
-        String result = this.buffer.toString();
-        this.clear();
-        return result;
     }
 
     public void clear() {
