@@ -15,17 +15,13 @@ public enum States implements State {
                 return INITIAL;
             }
 
-            if (Symbols.isArithmetic(ch)) {
-                ctx.append(ch);
-                return ARITHMETIC;
-            }
             if (Symbols.isPunctuation(ch)) {
                 ctx.append(ch);
                 return PUNCTUATION;
             }
             if (Symbols.isAssignment(ch)) {
                 ctx.append(ch);
-                return ASSIGNMENT;
+                return ASSIGNMENT_OR_RELATIONAL;
             }
             if (Alphabet.isLetter(ch) || Alphabet.isUnderline(ch)) {
                 ctx.append(ch);
@@ -45,19 +41,24 @@ public enum States implements State {
             }
             if (Symbols.isRelational(ch)) {
                 ctx.append(ch);
-                return RELATIONAL_SINGLE;
+                return RELATIONAL;
+            }
+            if (Symbols.isArithmetic(ch)) {
+                ctx.append(ch);
+                return ARITHMETIC;
             }
 
             return INVALID;
         }
     },
 
-    ASSIGNMENT {
+    ASSIGNMENT_OR_RELATIONAL {
         @Override
         public State accept(StateContext ctx, int ch) {
             if (ch == '=') {
                 ctx.append(ch);
-                return RELATIONAL_DOUBLE;
+                ctx.emit(Type.RELATIONAL);
+                return FINAL;
             }
 
             ctx.unread(ch);
@@ -237,31 +238,17 @@ public enum States implements State {
         }
     },
 
-    RELATIONAL_SINGLE {
+    RELATIONAL {
         @Override
         public State accept(StateContext ctx, int ch) {
-            if (Symbols.isRelational(ch)) {
+            if (ch == '=') {
                 ctx.append(ch);
-                return RELATIONAL_DOUBLE;
+            } else {
+                ctx.unread(ch);
             }
 
-            ctx.unread(ch);
             ctx.emit(Type.RELATIONAL);
             return FINAL;
-        }
-    },
-
-    RELATIONAL_DOUBLE {
-        @Override
-        public State accept(StateContext ctx, int ch) {
-            String lexeme = ctx.currentLexeme();
-            if (Symbols.isRelational(lexeme)) {
-                ctx.unread(ch);
-                ctx.emit(Type.RELATIONAL);
-                return FINAL;
-            }
-
-            return INVALID;
         }
     },
 
@@ -270,7 +257,7 @@ public enum States implements State {
         public State accept(StateContext ctx, int ch) {
             if (Symbols.isAssignment(ch)) {
                 ctx.append(ch);
-                return ASSIGNMENT;
+                return ASSIGNMENT_OR_RELATIONAL;
             }
             if (ch == '/') {
                 ctx.append(ch);
