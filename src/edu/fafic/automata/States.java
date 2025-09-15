@@ -27,13 +27,9 @@ public enum States implements State {
                 ctx.append(ch);
                 return ASSIGNMENT;
             }
-            if (Alphabet.isLetter(ch)) {
+            if (Alphabet.isLetter(ch) || Alphabet.isUnderline(ch)) {
                 ctx.append(ch);
                 return KEYWORD_OR_IDENTIFIER;
-            }
-            if (Alphabet.isUnderline(ch)) {
-                ctx.append(ch);
-                return IDENTIFIER;
             }
             if (Alphabet.isDigit(ch)) {
                 ctx.append(ch);
@@ -73,13 +69,9 @@ public enum States implements State {
     KEYWORD_OR_IDENTIFIER {
         @Override
         public State accept(StateContext ctx, int ch) {
-            if (Alphabet.isLetter(ch)) {
+            if (Alphabet.isLetter(ch) || Alphabet.isDigit(ch) || Alphabet.isUnderline(ch)) {
                 ctx.append(ch);
                 return KEYWORD_OR_IDENTIFIER;
-            }
-            if (Alphabet.isUnderline(ch) || Alphabet.isDigit(ch)) {
-                ctx.append(ch);
-                return IDENTIFIER;
             }
 
             Type type = Symbols.isKeyword(ctx.currentLexeme())
@@ -93,28 +85,6 @@ public enum States implements State {
             }
             if (Alphabet.isWhitespace(ch) || Symbols.isEOF(ch)) {
                 ctx.emit(type);
-                return FINAL;
-            }
-
-            return INVALID;
-        }
-    },
-
-    IDENTIFIER {
-        @Override
-        public State accept(StateContext ctx, int ch) {
-            if (Alphabet.isLetterOrDigit(ch) || Alphabet.isUnderline(ch)) {
-                ctx.append(ch);
-                return IDENTIFIER;
-            }
-
-            if (Symbols.isPunctuation(ch)) {
-                ctx.unread(ch);
-                ctx.emit(Type.ID);
-                return FINAL;
-            }
-            if (Alphabet.isWhitespace(ch) || Symbols.isEOF(ch)) {
-                ctx.emit(Type.ID);
                 return FINAL;
             }
 
