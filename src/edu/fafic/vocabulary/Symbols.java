@@ -17,6 +17,8 @@ public class Symbols {
             '+', '-', '*', '/'
     );
 
+    public static final Character TERNARY = '?';
+
     public static final Character ASSIGNMENT = '=';
 
     public static final Character EOL = ';';
@@ -36,11 +38,15 @@ public class Symbols {
     }
 
     public static boolean isLogical(int ch) {
-        return ch == '&' || ch == '|' || ch == '!' || ch == '?';
+        return ch == '&' || ch == '|' || ch == '!';
     }
 
     public static boolean isRelational(int ch) {
         return ch == '>' || ch == '<';
+    }
+
+    public static boolean isTernary(int ch) {
+        return ch == TERNARY;
     }
 
     public static boolean isAssignment(int ch) {

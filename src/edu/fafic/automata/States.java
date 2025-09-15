@@ -31,6 +31,10 @@ public enum States implements State {
                 ctx.append(ch);
                 return INTEGER_LITERAL;
             }
+            if (Alphabet.isSingleQuote(ch)) {
+                ctx.append(ch);
+                return CHARACTER_LITERAL;
+            }
             if (Alphabet.isDoubleQuote(ch)) {
                 ctx.append(ch);
                 return STRING_LITERAL;
@@ -46,6 +50,10 @@ public enum States implements State {
             if (Symbols.isArithmetic(ch)) {
                 ctx.append(ch);
                 return ARITHMETIC;
+            }
+            if (Symbols.isTernary(ch)) {
+                ctx.append(ch);
+                return TERNARY;
             }
 
             return INVALID;
@@ -177,6 +185,38 @@ public enum States implements State {
         }
     },
 
+    CHARACTER_LITERAL {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            if (Alphabet.isLineSeparator(ch) || Symbols.isEOF(ch)) {
+                return INVALID;
+            }
+
+            int last = ctx.last();
+
+            if (last != '\\' && ch == '\\') {
+                ctx.append(ch);
+                return CHARACTER_LITERAL;
+            }
+
+            ctx.append(ch);
+            return CHARACTER_LITERAL_END;
+        }
+    },
+
+    CHARACTER_LITERAL_END {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            if (Alphabet.isSingleQuote(ch)) {
+                ctx.append(ch);
+                ctx.emit(Type.CHARACTER_LITERAL);
+                return FINAL;
+            }
+
+            return INVALID;
+        }
+    },
+
     LOGICAL {
         @Override
         public State accept(StateContext ctx, int ch) {
@@ -246,6 +286,15 @@ public enum States implements State {
         public State accept(StateContext ctx, int ch) {
             ctx.unread(ch);
             ctx.emit(Type.PUNCTUATION);
+            return FINAL;
+        }
+    },
+
+    TERNARY {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            ctx.unread(ch);
+            ctx.emit(Type.TERNARY);
             return FINAL;
         }
     },

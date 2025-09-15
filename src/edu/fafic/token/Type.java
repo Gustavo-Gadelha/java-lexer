@@ -17,9 +17,11 @@ public enum Type {
     RELATIONAL,        // <, >, <=, >=, ==, !=
     ARITHMETIC,        // +, -, *, /
     LOGICAL,           // &&, ||, !
+    TERNARY,           // ?
 
     // Punctuation
     PUNCTUATION,       // (), {}, [], ;, etc.
+
 
     // Tokens especiais
     EOF,               // end of file/input
