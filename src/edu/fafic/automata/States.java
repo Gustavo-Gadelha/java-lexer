@@ -11,7 +11,7 @@ public enum States implements State {
             if (Symbols.isEOF(ch)) {
                 return EOF;
             }
-            if (Alphabet.isWhitespace(ch)) {
+            if (Symbols.isWhitespace(ch)) {
                 return INITIAL;
             }
 
@@ -31,7 +31,7 @@ public enum States implements State {
                 ctx.append(ch);
                 return INTEGER_LITERAL;
             }
-            if (Alphabet.isDoubleQuotes(ch)) {
+            if (Alphabet.isDoubleQuote(ch)) {
                 ctx.append(ch);
                 return STRING_LITERAL;
             }
@@ -78,12 +78,8 @@ public enum States implements State {
                     ? Type.KEYWORD
                     : Type.ID;
 
-            if (Symbols.isPunctuation(ch)) {
+            if (Symbols.isTerminator(ch) || Symbols.isPunctuation(ch)) {
                 ctx.unread(ch);
-                ctx.emit(type);
-                return FINAL;
-            }
-            if (Alphabet.isWhitespace(ch) || Symbols.isEOF(ch)) {
                 ctx.emit(type);
                 return FINAL;
             }
@@ -99,18 +95,12 @@ public enum States implements State {
                 ctx.append(ch);
                 return INTEGER_LITERAL;
             }
-
-            if (Alphabet.isDot(ch)) {
+            if (Alphabet.isDecimalSeparator(ch)) {
                 ctx.append(ch);
                 return FLOAT_LITERAL;
             }
-
-            if (Symbols.isEOL(ch)) {
+            if (Symbols.isTerminator(ch)) {
                 ctx.unread(ch);
-                ctx.emit(Type.INTEGER_LITERAL);
-                return FINAL;
-            }
-            if (Alphabet.isWhitespace(ch) || Symbols.isEOF(ch)) {
                 ctx.emit(Type.INTEGER_LITERAL);
                 return FINAL;
             }
@@ -126,13 +116,8 @@ public enum States implements State {
                 ctx.append(ch);
                 return FLOAT_LITERAL;
             }
-
-            if (Symbols.isEOL(ch)) {
+            if (Symbols.isTerminator(ch)) {
                 ctx.unread(ch);
-                ctx.emit(Type.FLOAT_LITERAL);
-                return FINAL;
-            }
-            if (Alphabet.isWhitespace(ch) || Symbols.isEOF(ch)) {
                 ctx.emit(Type.FLOAT_LITERAL);
                 return FINAL;
             }
@@ -144,7 +129,7 @@ public enum States implements State {
     COMMENT {
         @Override
         public State accept(StateContext ctx, int ch) {
-            if (Alphabet.isLineSeparator(ch)) {
+            if (Alphabet.isLineSeparator(ch) || Symbols.isEOF(ch)) {
                 ctx.emit(Type.COMMENT);
                 return FINAL;
             }
@@ -177,13 +162,14 @@ public enum States implements State {
     STRING_LITERAL {
         @Override
         public State accept(StateContext ctx, int ch) {
-            if (Alphabet.isDoubleQuotes(ch)) {
+            if (Symbols.isEOF(ch)) {
+                return INVALID;
+            }
+
+            if (Alphabet.isDoubleQuote(ch)) {
                 ctx.append(ch);
                 ctx.emit(Type.STRING_LITERAL);
                 return FINAL;
-            }
-            if (Symbols.isEOF(ch)) {
-                return INVALID;
             }
 
             ctx.append(ch);
@@ -272,12 +258,7 @@ public enum States implements State {
         }
     },
 
-    FINAL {
-        @Override
-        public State accept(StateContext ctx, int ch) {
-            return null;
-        }
-    },
+    FINAL,
 
     INVALID {
         @Override

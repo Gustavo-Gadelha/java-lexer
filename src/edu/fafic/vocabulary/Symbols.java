@@ -10,59 +10,41 @@ public class Symbols {
     ); // TODO: "true" e "false" são Boolean Literals
 
     public static final Set<Character> PUNCTUATION = Set.of(
-            '(', ')', '[', ']', '{', '}', ':', ';', ',', '.'
+            '(', ')', '[', ']', '{', '}', '<', '>', ':', ';', ',', '.'
     );
 
     public static final Set<Character> ARITHMETIC = Set.of(
             '+', '-', '*', '/'
     );
 
-    public static final Set<String> LOGICAL = Set.of(
-            "&&", "||", "!", "?"
-    );
-
-    public static final Set<String> RELATIONAL = Set.of(
-            "<", ">", "<=", ">=", "==", "!="
-    );
-
     public static final Character ASSIGNMENT = '=';
 
     public static final Character EOL = ';';
 
+    public static final int EOF = -1;
+
     public static boolean isKeyword(String lexeme) {
         return KEYWORDS.contains(lexeme);
-    }
-
-    public static boolean isArithmetic(int ch) {
-        return ARITHMETIC.contains((char) ch);
-    }
-
-    public static boolean isLogical(String lexeme) {
-        return LOGICAL.contains(lexeme);
-    }
-
-    public static boolean isLogical(int ch) {
-        return ch == '&' || ch == '|' || ch == '!' || ch == '?';
-    }
-
-    public static boolean isRelational(String lexeme) {
-        return RELATIONAL.contains(lexeme);
-    }
-
-    public static boolean isRelational(int ch) {
-        return ch == '>' || ch == '<';
     }
 
     public static boolean isPunctuation(int ch) {
         return PUNCTUATION.contains((char) ch);
     }
 
-    public static boolean isAssignment(int ch) {
-        return ch == ASSIGNMENT;
+    public static boolean isArithmetic(int ch) {
+        return ARITHMETIC.contains((char) ch);
     }
 
-    public static boolean isBooleanLiteral(String lexeme) {
-        return lexeme.equals("true") || lexeme.equals("false");
+    public static boolean isLogical(int ch) {
+        return ch == '&' || ch == '|' || ch == '!' || ch == '?';
+    }
+
+    public static boolean isRelational(int ch) {
+        return ch == '>' || ch == '<';
+    }
+
+    public static boolean isAssignment(int ch) {
+        return ch == ASSIGNMENT;
     }
 
     public static boolean isEOL(int ch) {
@@ -70,6 +52,14 @@ public class Symbols {
     }
 
     public static boolean isEOF(int ch) {
-        return ch == -1;
+        return ch == EOF;
+    }
+
+    public static boolean isWhitespace(int ch) {
+        return Alphabet.isWhitespace(ch) || Alphabet.isLineSeparator(ch);
+    }
+
+    public static boolean isTerminator(int ch) {
+        return Symbols.isWhitespace(ch) || Symbols.isEOL(ch) || Symbols.isEOF(ch);
     }
 }
