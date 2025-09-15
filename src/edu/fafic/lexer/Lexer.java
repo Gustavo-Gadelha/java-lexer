@@ -36,7 +36,7 @@ public class Lexer {
 
     public Token readToken() {
         State current = States.INITIAL;
-        StateContext ctx = new StateContext(this.buffer, this.lookahead, this.tokens::add);
+        StateContext ctx = new StateContext(this.buffer, this.lookahead, this::accept);
 
         do {
             int ch = this.read();
@@ -45,6 +45,10 @@ public class Lexer {
 
         this.buffer.clear();
         return this.tokens.getLast();
+    }
+
+    public void accept(Token token) {
+        this.tokens.add(token);
     }
 
     public boolean hasEOF() {
@@ -56,17 +60,5 @@ public class Lexer {
 
     public List<Token> getTokens() {
         return tokens;
-    }
-
-    public BufferedReader getReader() {
-        return reader;
-    }
-
-    public Buffer getBuffer() {
-        return buffer;
-    }
-
-    public Lookahead getLookahead() {
-        return lookahead;
     }
 }

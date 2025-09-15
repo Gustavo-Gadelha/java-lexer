@@ -1,6 +1,5 @@
 package edu.fafic.automata;
 
-import edu.fafic.token.Token;
 import edu.fafic.token.Type;
 import edu.fafic.vocabulary.Alphabet;
 import edu.fafic.vocabulary.Symbols;
@@ -66,7 +65,7 @@ public enum States implements State {
             }
 
             ctx.unread(ch);
-            ctx.emit(new Token(Type.AS, ctx.currentLexeme()));
+            ctx.emit(Type.AS);
             return FINAL;
         }
     },
@@ -83,17 +82,17 @@ public enum States implements State {
                 return IDENTIFIER;
             }
 
-            String lexeme = ctx.currentLexeme();
-            Type type = Symbols.isKeyword(lexeme) ? Type.KEYWORD : Type.ID;
-            Token token = new Token(type, lexeme);
+            Type type = Symbols.isKeyword(ctx.currentLexeme())
+                    ? Type.KEYWORD
+                    : Type.ID;
 
             if (Symbols.isPunctuation(ch)) {
                 ctx.unread(ch);
-                ctx.emit(token);
+                ctx.emit(type);
                 return FINAL;
             }
             if (Alphabet.isWhitespace(ch) || Symbols.isEOF(ch)) {
-                ctx.emit(token);
+                ctx.emit(type);
                 return FINAL;
             }
 
@@ -109,16 +108,13 @@ public enum States implements State {
                 return IDENTIFIER;
             }
 
-            String lexeme = ctx.currentLexeme();
-            Token token = new Token(Type.ID, lexeme);
-
             if (Symbols.isPunctuation(ch)) {
                 ctx.unread(ch);
-                ctx.emit(token);
+                ctx.emit(Type.ID);
                 return FINAL;
             }
             if (Alphabet.isWhitespace(ch) || Symbols.isEOF(ch)) {
-                ctx.emit(token);
+                ctx.emit(Type.ID);
                 return FINAL;
             }
 
@@ -139,16 +135,13 @@ public enum States implements State {
                 return FLOAT_LITERAL;
             }
 
-            String lexeme = ctx.currentLexeme();
-            Token token = new Token(Type.INTEGER_LITERAL, lexeme);
-
             if (Symbols.isEOL(ch)) {
                 ctx.unread(ch);
-                ctx.emit(token);
+                ctx.emit(Type.INTEGER_LITERAL);
                 return FINAL;
             }
             if (Alphabet.isWhitespace(ch) || Symbols.isEOF(ch)) {
-                ctx.emit(token);
+                ctx.emit(Type.INTEGER_LITERAL);
                 return FINAL;
             }
 
@@ -164,16 +157,13 @@ public enum States implements State {
                 return FLOAT_LITERAL;
             }
 
-            String lexeme = ctx.currentLexeme();
-            Token token = new Token(Type.FLOAT_LITERAL, lexeme);
-
             if (Symbols.isEOL(ch)) {
                 ctx.unread(ch);
-                ctx.emit(token);
+                ctx.emit(Type.FLOAT_LITERAL);
                 return FINAL;
             }
             if (Alphabet.isWhitespace(ch) || Symbols.isEOF(ch)) {
-                ctx.emit(token);
+                ctx.emit(Type.FLOAT_LITERAL);
                 return FINAL;
             }
 
@@ -184,11 +174,8 @@ public enum States implements State {
     COMMENT {
         @Override
         public State accept(StateContext ctx, int ch) {
-            if (Alphabet.isLineSeparator(ch) || Symbols.isEOL(ch)) {
-                if (Symbols.isEOL(ch)) ctx.unread(ch);
-
-                Token token = new Token(Type.COMMENT, ctx.currentLexeme());
-                ctx.emit(token);
+            if (Alphabet.isLineSeparator(ch)) {
+                ctx.emit(Type.COMMENT);
                 return FINAL;
             }
 
@@ -221,8 +208,7 @@ public enum States implements State {
             }
             if (ch == '/') {
                 ctx.append(ch);
-                Token token = new Token(Type.COMMENT, ctx.currentLexeme());
-                ctx.emit(token);
+                ctx.emit(Type.COMMENT);
                 return FINAL;
             }
 
@@ -252,8 +238,7 @@ public enum States implements State {
         @Override
         public State accept(StateContext ctx, int ch) {
             ctx.append(ch); // Concatena " ao buffer
-            Token token = new Token(Type.STRING_LITERAL, ctx.currentLexeme());
-            ctx.emit(token);
+            ctx.emit(Type.STRING_LITERAL);
             return FINAL;
         }
     },
@@ -269,8 +254,7 @@ public enum States implements State {
             String lexeme = ctx.currentLexeme();
             if (Symbols.isLogical(lexeme)) {
                 ctx.unread(ch);
-                Token token = new Token(Type.LOGICAL, lexeme);
-                ctx.emit(token);
+                ctx.emit(Type.LOGICAL);
                 return FINAL;
             }
 
@@ -284,8 +268,7 @@ public enum States implements State {
             String lexeme = ctx.currentLexeme();
             if (Symbols.isLogical(lexeme)) {
                 ctx.unread(ch);
-                Token token = new Token(Type.LOGICAL, lexeme);
-                ctx.emit(token);
+                ctx.emit(Type.LOGICAL);
                 return FINAL;
             }
 
@@ -302,8 +285,7 @@ public enum States implements State {
             }
 
             ctx.unread(ch);
-            Token token = new Token(Type.RELATIONAL, ctx.currentLexeme());
-            ctx.emit(token);
+            ctx.emit(Type.RELATIONAL);
             return FINAL;
         }
     },
@@ -314,8 +296,7 @@ public enum States implements State {
             String lexeme = ctx.currentLexeme();
             if (Symbols.isRelational(lexeme)) {
                 ctx.unread(ch);
-                Token token = new Token(Type.RELATIONAL, lexeme);
-                ctx.emit(token);
+                ctx.emit(Type.RELATIONAL);
                 return FINAL;
             }
 
@@ -340,8 +321,7 @@ public enum States implements State {
             }
 
             ctx.unread(ch);
-            Token token = new Token(Type.ARITHMETIC, ctx.currentLexeme());
-            ctx.emit(token);
+            ctx.emit(Type.ARITHMETIC);
             return FINAL;
         }
     }, // TODO: Extremamente simples, não lê mais de 1 símbolo
@@ -350,8 +330,7 @@ public enum States implements State {
         @Override
         public State accept(StateContext ctx, int ch) {
             ctx.unread(ch);
-            Token token = new Token(Type.PUNCTUATION, ctx.currentLexeme());
-            ctx.emit(token);
+            ctx.emit(Type.PUNCTUATION);
             return FINAL;
         }
     }, // TODO: Extremamente simples, talvez não funcione para todos os casos
@@ -359,8 +338,7 @@ public enum States implements State {
     EOF {
         @Override
         public State accept(StateContext ctx, int ch) {
-            Token token = new Token(Type.EOF, "EOF");
-            ctx.emit(token);
+            ctx.emit(Type.EOF);
             return FINAL;
         }
     },
