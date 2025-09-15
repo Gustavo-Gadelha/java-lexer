@@ -21,7 +21,7 @@ public enum States implements State {
             }
             if (Symbols.isAssignment(ch)) {
                 ctx.append(ch);
-                return ASSIGNMENT_OR_RELATIONAL;
+                return ASSIGNMENT;
             }
             if (Alphabet.isLetter(ch) || Alphabet.isUnderline(ch)) {
                 ctx.append(ch);
@@ -52,13 +52,12 @@ public enum States implements State {
         }
     },
 
-    ASSIGNMENT_OR_RELATIONAL {
+    ASSIGNMENT {
         @Override
         public State accept(StateContext ctx, int ch) {
             if (ch == '=') {
                 ctx.append(ch);
-                ctx.emit(Type.RELATIONAL);
-                return FINAL;
+                return RELATIONAL;
             }
 
             ctx.unread(ch);
@@ -161,23 +160,10 @@ public enum States implements State {
             if (Symbols.isEOF(ch)) {
                 return INVALID;
             }
-            if (ch == '*') {
-                ctx.append(ch);
-                return BLOCK_COMMENT_END;
-            }
 
-            ctx.append(ch);
-            return BLOCK_COMMENT;
-        }
-    },
+            int last = ctx.last();
 
-    BLOCK_COMMENT_END {
-        @Override
-        public State accept(StateContext ctx, int ch) {
-            if (Symbols.isEOF(ch)) {
-                return INVALID;
-            }
-            if (ch == '/') {
+            if (last == '*' && ch == '/') {
                 ctx.append(ch);
                 ctx.emit(Type.COMMENT);
                 return FINAL;
@@ -208,26 +194,40 @@ public enum States implements State {
     LOGICAL {
         @Override
         public State accept(StateContext ctx, int ch) {
-            if (ch == '&' || ch == '|') {
-                ctx.append(ch);
-            } else {
+            int last = ctx.last();
+
+            if (last == '!') {
+                if (ch == '=') {
+                    ctx.append(ch);
+                    return RELATIONAL;
+                }
                 ctx.unread(ch);
+                ctx.emit(Type.LOGICAL);
+                return FINAL;
             }
 
-            ctx.emit(Type.LOGICAL);
-            return FINAL;
+            if (ch == last) {
+                ctx.append(ch);
+                ctx.emit(Type.LOGICAL);
+                return FINAL;
+            }
+
+            return INVALID;
         }
     },
 
     RELATIONAL {
         @Override
         public State accept(StateContext ctx, int ch) {
-            if (ch == '=') {
+            int last = ctx.last();
+
+            if (last == '<' && ch == '=' || last == '>' && ch == '=') {
                 ctx.append(ch);
-            } else {
-                ctx.unread(ch);
+                ctx.emit(Type.RELATIONAL);
+                return FINAL;
             }
 
+            ctx.unread(ch);
             ctx.emit(Type.RELATIONAL);
             return FINAL;
         }
@@ -236,17 +236,17 @@ public enum States implements State {
     ARITHMETIC {
         @Override
         public State accept(StateContext ctx, int ch) {
-            if (Symbols.isAssignment(ch)) {
-                ctx.append(ch);
-                return ASSIGNMENT_OR_RELATIONAL;
-            }
-            if (ch == '/') {
-                ctx.append(ch);
-                return COMMENT;
-            }
-            if (ch == '*') {
-                ctx.append(ch);
-                return BLOCK_COMMENT;
+            int last = ctx.last();
+
+            if (last == '/') {
+                if (ch == '/') {
+                    ctx.append(ch);
+                    return COMMENT;
+                }
+                if (ch == '*') {
+                    ctx.append(ch);
+                    return BLOCK_COMMENT;
+                }
             }
 
             ctx.unread(ch);

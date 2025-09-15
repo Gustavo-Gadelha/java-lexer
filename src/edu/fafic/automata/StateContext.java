@@ -17,6 +17,14 @@ public record StateContext(Buffer buffer, Lookahead lookahead, Consumer<Token> s
         buffer.append(ch);
     }
 
+    public int first() {
+        return buffer.first();
+    }
+    
+    public int last() {
+        return buffer.last();
+    }
+
     public String currentLexeme() {
         return buffer.read();
     }
