@@ -1,6 +1,7 @@
 package edu.fafic.automata;
 
 import edu.fafic.core.LexingContext;
+import edu.fafic.exception.LexicalException;
 import edu.fafic.token.Type;
 import edu.fafic.vocabulary.Alphabet;
 import edu.fafic.vocabulary.Keywords;
@@ -296,7 +297,12 @@ public enum States implements State {
         }
     },
 
-    FINAL,
+    FINAL {
+        @Override
+        public State accept(LexingContext ctx, int ch) {
+            throw new LexicalException("O Lexer tentou executar o estado final");
+        }
+    },
 
     INVALID {
         @Override
