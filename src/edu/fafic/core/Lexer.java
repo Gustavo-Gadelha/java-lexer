@@ -20,7 +20,7 @@ public class Lexer {
     private Token emitted;
 
     public Lexer(Reader in) {
-        this.reader = new PushbackReader(in, 2);
+        this.reader = new PushbackReader(in);
         this.buffer = new StringBuffer();
         this.ctx = new LexingContextImpl();
         this.emitted = null;
@@ -28,7 +28,6 @@ public class Lexer {
 
     public Token nextToken() throws IOException {
         emitted = null;
-
         State current = States.INITIAL;
 
         do {
@@ -104,6 +103,7 @@ public class Lexer {
 
         @Override
         public void error(String message) {
+            System.out.printf("Caracteres no buffer: %s%n", buffer);
             throw new LexicalException("Lexing error: " + message);
         }
     }

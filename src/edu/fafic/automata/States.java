@@ -301,8 +301,8 @@ public enum States implements State {
     INVALID {
         @Override
         public State accept(LexingContext ctx, int ch) {
-            // TODO: Implementar um log de erros mais detalhado com LexicalException
-            throw new RuntimeException("O analisador léxico chegou em um estado inválido");
+            ctx.error("O analisador léxico chegou em um estado inválido lendo: %s".formatted((char) ctx.last()));
+            return FINAL;
         }
     };
 
