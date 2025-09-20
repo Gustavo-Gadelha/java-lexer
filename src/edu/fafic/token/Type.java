@@ -1,33 +1,107 @@
 package edu.fafic.token;
 
 public enum Type {
-    // Palavras reservadas
-    KEYWORD,
 
-    // Identificadores e literais
-    ID,
-    INTEGER_LITERAL,
-    FLOAT_LITERAL,
-    STRING_LITERAL,
-    CHARACTER_LITERAL,
-    BOOLEAN_LITERAL,   // true, false
+    IDENTIFIER,
+    LITERAL_INTEGER,
+    LITERAL_FLOAT,
+    LITERAL_STRING,
+    LITERAL_CHAR,
+    LITERAL_TRUE,
+    LITERAL_FALSE,
+    LITERAL_NULL,
 
-    // Operadores
-    AS,                // assignment
-    RELATIONAL,        // <, >, <=, >=, ==, !=
-    ARITHMETIC,        // +, -, *, /
-    LOGICAL,           // &&, ||, !
-    TERNARY,           // ?
+    KEYWORD_ABSTRACT,
+    KEYWORD_BOOLEAN,
+    KEYWORD_BREAK,
+    KEYWORD_CASE,
+    KEYWORD_CATCH,
+    KEYWORD_CHAR,
+    KEYWORD_CLASS,
+    KEYWORD_CONTINUE,
+    KEYWORD_DEFAULT,
+    KEYWORD_DO,
+    KEYWORD_DOUBLE,
+    KEYWORD_ELSE,
+    KEYWORD_ENUM,
+    KEYWORD_EXTENDS,
+    KEYWORD_FINAL,
+    KEYWORD_FINALLY,
+    KEYWORD_FLOAT,
+    KEYWORD_FOR,
+    KEYWORD_IF,
+    KEYWORD_IMPLEMENTS,
+    KEYWORD_IMPORT,
+    KEYWORD_INT,
+    KEYWORD_INTERFACE,
+    KEYWORD_LONG,
+    KEYWORD_NEW,
+    KEYWORD_PACKAGE,
+    KEYWORD_PRIVATE,
+    KEYWORD_PROTECTED,
+    KEYWORD_PUBLIC,
+    KEYWORD_RETURN,
+    KEYWORD_SHORT,
+    KEYWORD_STATIC,
+    KEYWORD_SUPER,
+    KEYWORD_SWITCH,
+    KEYWORD_THIS,
+    KEYWORD_THROW,
+    KEYWORD_THROWS,
+    KEYWORD_TRY,
+    KEYWORD_VOID,
+    KEYWORD_WHILE,
 
-    // Punctuation
-    PUNCTUATION,       // (), {}, [], ;, etc.
+    ASSIGN,                 // =
 
+    RELATIONAL_EQUALS,      // ==
+    RELATIONAL_NOT_EQUALS,  // !=
+    RELATIONAL_LESS,        // <
+    RELATIONAL_LESS_EQUAL,  // <=
+    RELATIONAL_GREATER,     // >
+    RELATIONAL_GREATER_EQUAL, // >=
 
-    // Tokens especiais
-    EOF,               // end of file/input
-    COMMENT,           // // or /* ... */
+    LOGICAL_AND,            // &&
+    LOGICAL_OR,             // ||
+    LOGICAL_NOT,            // !
 
-    // Error handling
-    INVALID
+    TERNARY,                // ?
+
+    BITWISE_AND,            // &
+    BITWISE_OR,             // |
+    BITWISE_XOR,            // ^
+    BITWISE_NOT,            // ~
+
+    ADD,                    // +
+    SUB,                    // -
+    MUL,                    // *
+    DIV,                    // /
+    MOD,                    // %
+
+    INCREMENT,              // ++
+    DECREMENT,              // --
+
+    ADD_EQUALS,             // +=
+    SUB_EQUALS,             // -=
+    MUL_EQUALS,             // *=
+    DIV_EQUALS,             // /=
+    MOD_EQUALS,             // %=
+
+    ARROW,                  // ->
+
+    DOT,                    // .
+    COMMA,                  // ,
+    COLON,                  // :
+    SEMICOLON,              // ;
+    AT,                     // @
+    LPAREN,                 // (
+    RPAREN,                 // )
+    LBRACE,                 // {
+    RBRACE,                 // }
+    LBRACKET,               // [
+    RBRACKET,               // ]
+
+    EOF,                    // End of file
+    INVALID                 // Default
 }
 

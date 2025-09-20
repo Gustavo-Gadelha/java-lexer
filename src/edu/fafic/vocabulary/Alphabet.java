@@ -4,7 +4,13 @@ import java.util.Set;
 
 public final class Alphabet {
 
+    public static final int EOF = -1;
+
     private Alphabet() {
+    }
+
+    public static boolean isEOF(int ch) {
+        return ch == EOF;
     }
 
     public static boolean isLetter(int ch) {
@@ -41,6 +47,10 @@ public final class Alphabet {
 
     public static boolean isDecimalPoint(int ch) {
         return ch == '.';
+    }
+
+    public static boolean isSemicolon(int ch) {
+        return ch == ';';
     }
 
     public static boolean isSingleQuote(int ch) {
