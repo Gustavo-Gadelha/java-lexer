@@ -1,7 +1,9 @@
 package edu.fafic.automata;
 
+import edu.fafic.core.LexingContext;
+
 public interface State {
 
-    State accept(StateContext ctx, int ch);
+    State accept(LexingContext ctx, int ch);
 
 }

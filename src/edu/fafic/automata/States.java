@@ -1,5 +1,6 @@
 package edu.fafic.automata;
 
+import edu.fafic.core.LexingContext;
 import edu.fafic.token.Type;
 import edu.fafic.vocabulary.Alphabet;
 import edu.fafic.vocabulary.Symbols;
@@ -7,7 +8,7 @@ import edu.fafic.vocabulary.Symbols;
 public enum States implements State {
     INITIAL {
         @Override
-        public State accept(StateContext ctx, int ch) {
+        public State accept(LexingContext ctx, int ch) {
             if (Symbols.isEOF(ch)) {
                 return EOF;
             }
@@ -62,7 +63,7 @@ public enum States implements State {
 
     ASSIGNMENT {
         @Override
-        public State accept(StateContext ctx, int ch) {
+        public State accept(LexingContext ctx, int ch) {
             if (ch == '=') {
                 ctx.append(ch);
                 return RELATIONAL;
@@ -76,7 +77,7 @@ public enum States implements State {
 
     KEYWORD_OR_IDENTIFIER {
         @Override
-        public State accept(StateContext ctx, int ch) {
+        public State accept(LexingContext ctx, int ch) {
             if (Alphabet.isLetter(ch) || Alphabet.isDigit(ch) || Alphabet.isUnderline(ch)) {
                 ctx.append(ch);
                 return KEYWORD_OR_IDENTIFIER;
@@ -98,7 +99,7 @@ public enum States implements State {
 
     INTEGER_LITERAL {
         @Override
-        public State accept(StateContext ctx, int ch) {
+        public State accept(LexingContext ctx, int ch) {
             if (Alphabet.isDigit(ch)) {
                 ctx.append(ch);
                 return INTEGER_LITERAL;
@@ -119,7 +120,7 @@ public enum States implements State {
 
     FLOAT_LITERAL {
         @Override
-        public State accept(StateContext ctx, int ch) {
+        public State accept(LexingContext ctx, int ch) {
             if (Alphabet.isDigit(ch)) {
                 ctx.append(ch);
                 return FLOAT_LITERAL;
@@ -136,7 +137,7 @@ public enum States implements State {
 
     COMMENT {
         @Override
-        public State accept(StateContext ctx, int ch) {
+        public State accept(LexingContext ctx, int ch) {
             if (Alphabet.isLineSeparator(ch) || Symbols.isEOF(ch)) {
                 ctx.emit(Type.COMMENT);
                 return FINAL;
@@ -149,7 +150,7 @@ public enum States implements State {
 
     BLOCK_COMMENT {
         @Override
-        public State accept(StateContext ctx, int ch) {
+        public State accept(LexingContext ctx, int ch) {
             if (Symbols.isEOF(ch)) {
                 return INVALID;
             }
@@ -169,7 +170,7 @@ public enum States implements State {
 
     STRING_LITERAL {
         @Override
-        public State accept(StateContext ctx, int ch) {
+        public State accept(LexingContext ctx, int ch) {
             if (Symbols.isEOF(ch)) {
                 return INVALID;
             }
@@ -187,7 +188,7 @@ public enum States implements State {
 
     CHARACTER_LITERAL {
         @Override
-        public State accept(StateContext ctx, int ch) {
+        public State accept(LexingContext ctx, int ch) {
             if (Alphabet.isLineSeparator(ch) || Symbols.isEOF(ch)) {
                 return INVALID;
             }
@@ -206,7 +207,7 @@ public enum States implements State {
 
     CHARACTER_LITERAL_END {
         @Override
-        public State accept(StateContext ctx, int ch) {
+        public State accept(LexingContext ctx, int ch) {
             if (Alphabet.isSingleQuote(ch)) {
                 ctx.append(ch);
                 ctx.emit(Type.CHARACTER_LITERAL);
@@ -219,7 +220,7 @@ public enum States implements State {
 
     LOGICAL {
         @Override
-        public State accept(StateContext ctx, int ch) {
+        public State accept(LexingContext ctx, int ch) {
             int last = ctx.last();
 
             if (last == '!') {
@@ -244,7 +245,7 @@ public enum States implements State {
 
     RELATIONAL {
         @Override
-        public State accept(StateContext ctx, int ch) {
+        public State accept(LexingContext ctx, int ch) {
             int last = ctx.last();
 
             if (last == '<' && ch == '=' || last == '>' && ch == '=') {
@@ -261,7 +262,7 @@ public enum States implements State {
 
     ARITHMETIC {
         @Override
-        public State accept(StateContext ctx, int ch) {
+        public State accept(LexingContext ctx, int ch) {
             int last = ctx.last();
 
             if (last == '/') {
@@ -283,7 +284,7 @@ public enum States implements State {
 
     PUNCTUATION {
         @Override
-        public State accept(StateContext ctx, int ch) {
+        public State accept(LexingContext ctx, int ch) {
             ctx.unread(ch);
             ctx.emit(Type.PUNCTUATION);
             return FINAL;
@@ -292,7 +293,7 @@ public enum States implements State {
 
     TERNARY {
         @Override
-        public State accept(StateContext ctx, int ch) {
+        public State accept(LexingContext ctx, int ch) {
             ctx.unread(ch);
             ctx.emit(Type.TERNARY);
             return FINAL;
@@ -301,7 +302,7 @@ public enum States implements State {
 
     EOF {
         @Override
-        public State accept(StateContext ctx, int ch) {
+        public State accept(LexingContext ctx, int ch) {
             ctx.emit(Type.EOF);
             return FINAL;
         }
@@ -311,14 +312,14 @@ public enum States implements State {
 
     INVALID {
         @Override
-        public State accept(StateContext ctx, int ch) {
+        public State accept(LexingContext ctx, int ch) {
             // TODO: Implementar um log de erros mais detalhado com LexicalException
             throw new RuntimeException("O analisador léxico chegou em um estado inválido");
         }
     };
 
     @Override
-    public State accept(StateContext ctx, int ch) {
+    public State accept(LexingContext ctx, int ch) {
         return INVALID;
     }
 }
