@@ -1,18 +1,324 @@
 package edu.fafic.automata;
 
-public enum States {
-    INITIAL,
+import edu.fafic.token.Type;
+import edu.fafic.vocabulary.Alphabet;
+import edu.fafic.vocabulary.Symbols;
+
+public enum States implements State {
+    INITIAL {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            if (Symbols.isEOF(ch)) {
+                return EOF;
+            }
+            if (Symbols.isWhitespace(ch)) {
+                return INITIAL;
+            }
+
+            if (Symbols.isPunctuation(ch)) {
+                ctx.append(ch);
+                return PUNCTUATION;
+            }
+            if (Symbols.isAssignment(ch)) {
+                ctx.append(ch);
+                return ASSIGNMENT;
+            }
+            if (Alphabet.isLetter(ch) || Alphabet.isUnderline(ch)) {
+                ctx.append(ch);
+                return KEYWORD_OR_IDENTIFIER;
+            }
+            if (Alphabet.isDigit(ch)) {
+                ctx.append(ch);
+                return INTEGER_LITERAL;
+            }
+            if (Alphabet.isSingleQuote(ch)) {
+                ctx.append(ch);
+                return CHARACTER_LITERAL;
+            }
+            if (Alphabet.isDoubleQuote(ch)) {
+                ctx.append(ch);
+                return STRING_LITERAL;
+            }
+            if (Symbols.isLogical(ch)) {
+                ctx.append(ch);
+                return LOGICAL;
+            }
+            if (Symbols.isRelational(ch)) {
+                ctx.append(ch);
+                return RELATIONAL;
+            }
+            if (Symbols.isArithmetic(ch)) {
+                ctx.append(ch);
+                return ARITHMETIC;
+            }
+            if (Symbols.isTernary(ch)) {
+                ctx.append(ch);
+                return TERNARY;
+            }
+
+            return INVALID;
+        }
+    },
+
+    ASSIGNMENT {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            if (ch == '=') {
+                ctx.append(ch);
+                return RELATIONAL;
+            }
+
+            ctx.unread(ch);
+            ctx.emit(Type.AS);
+            return FINAL;
+        }
+    },
+
+    KEYWORD_OR_IDENTIFIER {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            if (Alphabet.isLetter(ch) || Alphabet.isDigit(ch) || Alphabet.isUnderline(ch)) {
+                ctx.append(ch);
+                return KEYWORD_OR_IDENTIFIER;
+            }
+
+            Type type = Symbols.isKeyword(ctx.currentLexeme())
+                    ? Type.KEYWORD
+                    : Type.ID;
+
+            if (Symbols.isTerminator(ch) || Symbols.isPunctuation(ch)) {
+                ctx.unread(ch);
+                ctx.emit(type);
+                return FINAL;
+            }
+
+            return INVALID;
+        }
+    },
+
+    INTEGER_LITERAL {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            if (Alphabet.isDigit(ch)) {
+                ctx.append(ch);
+                return INTEGER_LITERAL;
+            }
+            if (Alphabet.isDecimalSeparator(ch)) {
+                ctx.append(ch);
+                return FLOAT_LITERAL;
+            }
+            if (Symbols.isTerminator(ch)) {
+                ctx.unread(ch);
+                ctx.emit(Type.INTEGER_LITERAL);
+                return FINAL;
+            }
+
+            return INVALID;
+        }
+    },
+
+    FLOAT_LITERAL {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            if (Alphabet.isDigit(ch)) {
+                ctx.append(ch);
+                return FLOAT_LITERAL;
+            }
+            if (Symbols.isTerminator(ch)) {
+                ctx.unread(ch);
+                ctx.emit(Type.FLOAT_LITERAL);
+                return FINAL;
+            }
+
+            return INVALID;
+        }
+    },
+
+    COMMENT {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            if (Alphabet.isLineSeparator(ch) || Symbols.isEOF(ch)) {
+                ctx.emit(Type.COMMENT);
+                return FINAL;
+            }
+
+            ctx.append(ch);
+            return COMMENT;
+        }
+    },
+
+    BLOCK_COMMENT {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            if (Symbols.isEOF(ch)) {
+                return INVALID;
+            }
+
+            int last = ctx.last();
+
+            if (last == '*' && ch == '/') {
+                ctx.append(ch);
+                ctx.emit(Type.COMMENT);
+                return FINAL;
+            }
+
+            ctx.append(ch);
+            return BLOCK_COMMENT;
+        }
+    },
+
+    STRING_LITERAL {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            if (Symbols.isEOF(ch)) {
+                return INVALID;
+            }
+
+            if (Alphabet.isDoubleQuote(ch)) {
+                ctx.append(ch);
+                ctx.emit(Type.STRING_LITERAL);
+                return FINAL;
+            }
+
+            ctx.append(ch);
+            return STRING_LITERAL;
+        }
+    },
+
+    CHARACTER_LITERAL {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            if (Alphabet.isLineSeparator(ch) || Symbols.isEOF(ch)) {
+                return INVALID;
+            }
+
+            int last = ctx.last();
+
+            if (last != '\\' && ch == '\\') {
+                ctx.append(ch);
+                return CHARACTER_LITERAL;
+            }
+
+            ctx.append(ch);
+            return CHARACTER_LITERAL_END;
+        }
+    },
+
+    CHARACTER_LITERAL_END {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            if (Alphabet.isSingleQuote(ch)) {
+                ctx.append(ch);
+                ctx.emit(Type.CHARACTER_LITERAL);
+                return FINAL;
+            }
+
+            return INVALID;
+        }
+    },
+
+    LOGICAL {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            int last = ctx.last();
+
+            if (last == '!') {
+                if (ch == '=') {
+                    ctx.append(ch);
+                    return RELATIONAL;
+                }
+                ctx.unread(ch);
+                ctx.emit(Type.LOGICAL);
+                return FINAL;
+            }
+
+            if (ch == last) {
+                ctx.append(ch);
+                ctx.emit(Type.LOGICAL);
+                return FINAL;
+            }
+
+            return INVALID;
+        }
+    },
+
+    RELATIONAL {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            int last = ctx.last();
+
+            if (last == '<' && ch == '=' || last == '>' && ch == '=') {
+                ctx.append(ch);
+                ctx.emit(Type.RELATIONAL);
+                return FINAL;
+            }
+
+            ctx.unread(ch);
+            ctx.emit(Type.RELATIONAL);
+            return FINAL;
+        }
+    },
+
+    ARITHMETIC {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            int last = ctx.last();
+
+            if (last == '/') {
+                if (ch == '/') {
+                    ctx.append(ch);
+                    return COMMENT;
+                }
+                if (ch == '*') {
+                    ctx.append(ch);
+                    return BLOCK_COMMENT;
+                }
+            }
+
+            ctx.unread(ch);
+            ctx.emit(Type.ARITHMETIC);
+            return FINAL;
+        }
+    },
+
+    PUNCTUATION {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            ctx.unread(ch);
+            ctx.emit(Type.PUNCTUATION);
+            return FINAL;
+        }
+    },
+
+    TERNARY {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            ctx.unread(ch);
+            ctx.emit(Type.TERNARY);
+            return FINAL;
+        }
+    },
+
+    EOF {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            ctx.emit(Type.EOF);
+            return FINAL;
+        }
+    },
+
     FINAL,
-    SYMBOL,
-    INTEGER_LITERAL,
-    FLOAT_LITERAL,
-    STRING_LITERAL,
-    KEYWORD_OR_IDENTIFIER,
-    IDENTIFIER,
-    LOGICAL,
-    ARITHMETIC,
-    RELATIONAL,
-    PUNCTUATION,
-    INVALID,
-    EOF,
+
+    INVALID {
+        @Override
+        public State accept(StateContext ctx, int ch) {
+            // TODO: Implementar um log de erros mais detalhado com LexicalException
+            throw new RuntimeException("O analisador léxico chegou em um estado inválido");
+        }
+    };
+
+    @Override
+    public State accept(StateContext ctx, int ch) {
+        return INVALID;
+    }
 }

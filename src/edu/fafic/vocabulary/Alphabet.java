@@ -10,12 +10,8 @@ public class Alphabet {
         return Character.isDigit(symbol);
     }
 
-    public static boolean isLetterOrDigit(int symbol) {
-        return Character.isLetterOrDigit(symbol);
-    }
-
     public static boolean isWhitespace(int symbol) {
-        return Character.isWhitespace(symbol) || Alphabet.isLineSeparator(symbol);
+        return Character.isWhitespace(symbol);
     }
 
     public static boolean isLineSeparator(int symbol) {
@@ -26,7 +22,15 @@ public class Alphabet {
         return symbol == '_';
     }
 
-    public static boolean isDot(int symbol) {
+    public static boolean isDecimalSeparator(int symbol) {
         return symbol == '.';
+    }
+
+    public static boolean isSingleQuote(int symbol) {
+        return symbol == '\'';
+    }
+
+    public static boolean isDoubleQuote(int symbol) {
+        return symbol == '\"';
     }
 }
