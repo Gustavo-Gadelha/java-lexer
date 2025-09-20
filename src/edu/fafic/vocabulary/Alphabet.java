@@ -1,36 +1,69 @@
 package edu.fafic.vocabulary;
 
-public class Alphabet {
+import java.util.Set;
 
-    public static boolean isLetter(int symbol) {
-        return Character.isLetter(symbol);
+public final class Alphabet {
+
+    private Alphabet() {
     }
 
-    public static boolean isDigit(int symbol) {
-        return Character.isDigit(symbol);
+    public static boolean isLetter(int ch) {
+        return Character.isLetter(ch);
     }
 
-    public static boolean isWhitespace(int symbol) {
-        return Character.isWhitespace(symbol);
+    public static boolean isDigit(int ch) {
+        return Character.isDigit(ch);
     }
 
-    public static boolean isLineSeparator(int symbol) {
-        return symbol == '\r' || symbol == '\n';
+    public static boolean isUnderline(int ch) {
+        return ch == '_';
     }
 
-    public static boolean isUnderline(int symbol) {
-        return symbol == '_';
+    public static boolean isDollar(int ch) {
+        return ch == '$';
     }
 
-    public static boolean isDecimalSeparator(int symbol) {
-        return symbol == '.';
+    public static boolean isIdentifierStart(int ch) {
+        return isLetter(ch) || isUnderline(ch) || isDollar(ch);
     }
 
-    public static boolean isSingleQuote(int symbol) {
-        return symbol == '\'';
+    public static boolean isIdentifierPart(int ch) {
+        return isLetter(ch) || isDigit(ch) || isUnderline(ch) || isDollar(ch);
     }
 
-    public static boolean isDoubleQuote(int symbol) {
-        return symbol == '\"';
+    public static boolean isWhitespace(int ch) {
+        return Character.isWhitespace(ch);
+    }
+
+    public static boolean isNewline(int ch) {
+        return ch == '\n' || ch == '\r';
+    }
+
+    public static boolean isDecimalPoint(int ch) {
+        return ch == '.';
+    }
+
+    public static boolean isSingleQuote(int ch) {
+        return ch == '\'';
+    }
+
+    public static boolean isDoubleQuote(int ch) {
+        return ch == '\"';
+    }
+
+    private static final Set<Character> OPERATORS = Set.of(
+            '+', '-', '*', '/', '%', '=', '&', '|', '^', '!', '<', '>', '~'
+    );
+
+    private static final Set<Character> PUNCTUATION = Set.of(
+            '(', ')', '{', '}', '[', ']', ';', ',', ':', '?', '@'
+    );
+
+    public static boolean isOperator(int ch) {
+        return OPERATORS.contains((char) ch);
+    }
+
+    public static boolean isPunctuation(int ch) {
+        return PUNCTUATION.contains((char) ch);
     }
 }
