@@ -5,7 +5,7 @@ import edu.fafic.automata.States;
 import edu.fafic.exception.LexicalException;
 import edu.fafic.token.Token;
 import edu.fafic.token.Type;
-import edu.fafic.vocabulary.Symbols;
+import edu.fafic.vocabulary.Alphabet;
 
 import java.io.IOException;
 import java.io.PushbackReader;
@@ -52,7 +52,7 @@ public class Lexer {
 
         @Override
         public void unread(int ch) {
-            if (ch == Symbols.EOF) return;
+            if (ch == Alphabet.EOF) return;
 
             try {
                 reader.unread(ch);
@@ -64,7 +64,7 @@ public class Lexer {
         @Override
         public int peek() {
             int ch = read();
-            if (ch != Symbols.EOF) unread(ch);
+            if (ch != Alphabet.EOF) unread(ch);
             return ch;
         }
 

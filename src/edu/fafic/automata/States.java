@@ -3,28 +3,27 @@ package edu.fafic.automata;
 import edu.fafic.core.LexingContext;
 import edu.fafic.token.Type;
 import edu.fafic.vocabulary.Alphabet;
-import edu.fafic.vocabulary.Symbols;
+import edu.fafic.vocabulary.Keywords;
+import edu.fafic.vocabulary.Operators;
+import edu.fafic.vocabulary.Punctuation;
 
 public enum States implements State {
     INITIAL {
         @Override
         public State accept(LexingContext ctx, int ch) {
-            if (Symbols.isEOF(ch)) {
+            if (Alphabet.isEOF(ch)) {
                 return EOF;
             }
-            if (Symbols.isWhitespace(ch)) {
+            if (Alphabet.isWhitespace(ch)) {
                 return INITIAL;
             }
 
-            if (Symbols.isPunctuation(ch)) {
+            if (Punctuation.isKnown(ch)) {
                 ctx.append(ch);
                 return PUNCTUATION;
             }
-            if (Symbols.isAssignment(ch)) {
-                ctx.append(ch);
-                return ASSIGNMENT;
-            }
-            if (Alphabet.isLetter(ch) || Alphabet.isUnderline(ch)) {
+
+            if (Alphabet.isIdentifierStart(ch)) {
                 ctx.append(ch);
                 return KEYWORD_OR_IDENTIFIER;
             }
@@ -40,37 +39,41 @@ public enum States implements State {
                 ctx.append(ch);
                 return STRING_LITERAL;
             }
-            if (Symbols.isLogical(ch)) {
+
+            if (Operators.isEquals(ch)) {
                 ctx.append(ch);
-                return LOGICAL;
+                return ASSIGNMENT;
             }
-            if (Symbols.isRelational(ch)) {
+            if (Operators.isTernary(ch)) {
                 ctx.append(ch);
-                return RELATIONAL;
+                return TERNARY;
             }
-            if (Symbols.isArithmetic(ch)) {
+            if (Operators.isArithmeticStart(ch)) {
                 ctx.append(ch);
                 return ARITHMETIC;
             }
-            if (Symbols.isTernary(ch)) {
+            if (Operators.isLogicalStart(ch)) {
                 ctx.append(ch);
-                return TERNARY;
+                return LOGICAL;
+            }
+            if (Operators.isRelationalStart(ch)) {
+                ctx.append(ch);
+                return RELATIONAL;
+            }
+            if (Operators.isBitwise(ch)) {
+                ctx.append(ch);
+                return BITWISE;
             }
 
             return INVALID;
         }
     },
 
-    ASSIGNMENT {
+    PUNCTUATION {
         @Override
         public State accept(LexingContext ctx, int ch) {
-            if (ch == '=') {
-                ctx.append(ch);
-                return RELATIONAL;
-            }
-
             ctx.unread(ch);
-            ctx.emit(Type.AS);
+            ctx.emit(Punctuation.resolve(ctx.lexeme()));
             return FINAL;
         }
     },
@@ -78,16 +81,12 @@ public enum States implements State {
     KEYWORD_OR_IDENTIFIER {
         @Override
         public State accept(LexingContext ctx, int ch) {
-            if (Alphabet.isLetter(ch) || Alphabet.isDigit(ch) || Alphabet.isUnderline(ch)) {
+            if (Alphabet.isIdentifierPart(ch)) {
                 ctx.append(ch);
                 return KEYWORD_OR_IDENTIFIER;
             }
-
-            Type type = Symbols.isKeyword(ctx.currentLexeme())
-                    ? Type.KEYWORD
-                    : Type.ID;
-
-            if (Symbols.isTerminator(ch) || Symbols.isPunctuation(ch)) {
+            if (Alphabet.isWhitespace(ch) || Alphabet.isEOF(ch) || Punctuation.isKnown(ch)) {
+                Type type = Keywords.resolve(ctx.lexeme());
                 ctx.unread(ch);
                 ctx.emit(type);
                 return FINAL;
@@ -104,13 +103,14 @@ public enum States implements State {
                 ctx.append(ch);
                 return INTEGER_LITERAL;
             }
-            if (Alphabet.isDecimalSeparator(ch)) {
+            if (Alphabet.isDecimalPoint(ch)) {
                 ctx.append(ch);
                 return FLOAT_LITERAL;
             }
-            if (Symbols.isTerminator(ch)) {
+
+            if (Alphabet.isWhitespace(ch) || Alphabet.isEOF(ch) || Punctuation.isKnown(ch)) {
                 ctx.unread(ch);
-                ctx.emit(Type.INTEGER_LITERAL);
+                ctx.emit(Type.LITERAL_INTEGER);
                 return FINAL;
             }
 
@@ -125,9 +125,10 @@ public enum States implements State {
                 ctx.append(ch);
                 return FLOAT_LITERAL;
             }
-            if (Symbols.isTerminator(ch)) {
+
+            if (Alphabet.isWhitespace(ch) || Alphabet.isEOF(ch) || Punctuation.isKnown(ch)) {
                 ctx.unread(ch);
-                ctx.emit(Type.FLOAT_LITERAL);
+                ctx.emit(Type.LITERAL_FLOAT);
                 return FINAL;
             }
 
@@ -138,12 +139,13 @@ public enum States implements State {
     COMMENT {
         @Override
         public State accept(LexingContext ctx, int ch) {
-            if (Alphabet.isLineSeparator(ch) || Symbols.isEOF(ch)) {
-                ctx.emit(Type.COMMENT);
-                return FINAL;
+            if (Alphabet.isEOF(ch)) {
+                return EOF;
+            }
+            if (Alphabet.isNewline(ch)) {
+                return INITIAL;
             }
 
-            ctx.append(ch);
             return COMMENT;
         }
     },
@@ -151,51 +153,24 @@ public enum States implements State {
     BLOCK_COMMENT {
         @Override
         public State accept(LexingContext ctx, int ch) {
-            if (Symbols.isEOF(ch)) {
+            if (Alphabet.isEOF(ch)) {
                 return INVALID;
             }
-
-            int last = ctx.last();
-
-            if (last == '*' && ch == '/') {
-                ctx.append(ch);
-                ctx.emit(Type.COMMENT);
-                return FINAL;
+            if (ctx.last() == '*' && ch == '/') {
+                return INITIAL;
             }
 
-            ctx.append(ch);
             return BLOCK_COMMENT;
-        }
-    },
-
-    STRING_LITERAL {
-        @Override
-        public State accept(LexingContext ctx, int ch) {
-            if (Symbols.isEOF(ch)) {
-                return INVALID;
-            }
-
-            if (Alphabet.isDoubleQuote(ch)) {
-                ctx.append(ch);
-                ctx.emit(Type.STRING_LITERAL);
-                return FINAL;
-            }
-
-            ctx.append(ch);
-            return STRING_LITERAL;
         }
     },
 
     CHARACTER_LITERAL {
         @Override
         public State accept(LexingContext ctx, int ch) {
-            if (Alphabet.isLineSeparator(ch) || Symbols.isEOF(ch)) {
+            if (Alphabet.isNewline(ch) || Alphabet.isEOF(ch)) {
                 return INVALID;
             }
-
-            int last = ctx.last();
-
-            if (last != '\\' && ch == '\\') {
+            if (ctx.last() != '\\' && ch == '\\') {
                 ctx.append(ch);
                 return CHARACTER_LITERAL;
             }
@@ -205,12 +180,30 @@ public enum States implements State {
         }
     },
 
+    STRING_LITERAL {
+        @Override
+        public State accept(LexingContext ctx, int ch) {
+            if (Alphabet.isEOF(ch)) {
+                return INVALID;
+            }
+
+            if (Alphabet.isDoubleQuote(ch)) {
+                ctx.append(ch);
+                ctx.emit(Type.LITERAL_STRING);
+                return FINAL;
+            }
+
+            ctx.append(ch);
+            return STRING_LITERAL;
+        }
+    },
+
     CHARACTER_LITERAL_END {
         @Override
         public State accept(LexingContext ctx, int ch) {
             if (Alphabet.isSingleQuote(ch)) {
                 ctx.append(ch);
-                ctx.emit(Type.CHARACTER_LITERAL);
+                ctx.emit(Type.LITERAL_CHAR);
                 return FINAL;
             }
 
@@ -218,44 +211,25 @@ public enum States implements State {
         }
     },
 
-    LOGICAL {
+    ASSIGNMENT {
         @Override
         public State accept(LexingContext ctx, int ch) {
-            int last = ctx.last();
-
-            if (last == '!') {
-                if (ch == '=') {
-                    ctx.append(ch);
-                    return RELATIONAL;
-                }
-                ctx.unread(ch);
-                ctx.emit(Type.LOGICAL);
-                return FINAL;
-            }
-
-            if (ch == last) {
+            if (ch == '=') {
                 ctx.append(ch);
-                ctx.emit(Type.LOGICAL);
-                return FINAL;
-            }
-
-            return INVALID;
-        }
-    },
-
-    RELATIONAL {
-        @Override
-        public State accept(LexingContext ctx, int ch) {
-            int last = ctx.last();
-
-            if (last == '<' && ch == '=' || last == '>' && ch == '=') {
-                ctx.append(ch);
-                ctx.emit(Type.RELATIONAL);
-                return FINAL;
+                return RELATIONAL;
             }
 
             ctx.unread(ch);
-            ctx.emit(Type.RELATIONAL);
+            ctx.emit(Operators.resolve(ctx.lexeme()));
+            return FINAL;
+        }
+    },
+
+    TERNARY {
+        @Override
+        public State accept(LexingContext ctx, int ch) {
+            ctx.unread(ch);
+            ctx.emit(Type.TERNARY);
             return FINAL;
         }
     },
@@ -277,25 +251,58 @@ public enum States implements State {
             }
 
             ctx.unread(ch);
-            ctx.emit(Type.ARITHMETIC);
+            ctx.emit(Operators.resolve(ctx.lexeme()));
             return FINAL;
         }
     },
 
-    PUNCTUATION {
+    LOGICAL {
         @Override
         public State accept(LexingContext ctx, int ch) {
+            int last = ctx.last();
+
+            if (last == '!') {
+                if (ch == '=') {
+                    ctx.append(ch);
+                    return RELATIONAL;
+                }
+                ctx.unread(ch);
+                ctx.emit(Operators.resolve(ctx.lexeme()));
+                return FINAL;
+            }
+
+            if (ch == last) {
+                ctx.append(ch);
+                ctx.emit(Operators.resolve(ctx.lexeme()));
+                return FINAL;
+            }
+
+            return INVALID;
+        }
+    },
+
+    RELATIONAL {
+        @Override
+        public State accept(LexingContext ctx, int ch) {
+            int last = ctx.last();
+
+            if (last == '<' && ch == '=' || last == '>' && ch == '=') {
+                ctx.append(ch);
+                ctx.emit(Operators.resolve(ctx.lexeme()));
+                return FINAL;
+            }
+
             ctx.unread(ch);
-            ctx.emit(Type.PUNCTUATION);
+            ctx.emit(Operators.resolve(ctx.lexeme()));
             return FINAL;
         }
     },
 
-    TERNARY {
+    BITWISE {
         @Override
         public State accept(LexingContext ctx, int ch) {
             ctx.unread(ch);
-            ctx.emit(Type.TERNARY);
+            ctx.emit(Operators.resolve(ctx.lexeme()));
             return FINAL;
         }
     },
