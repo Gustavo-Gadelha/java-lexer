@@ -18,7 +18,7 @@ public interface LexingContext {
 
     void clear();
 
-    String currentLexeme();
+    String lexeme();
 
     void emit(Type type);
 

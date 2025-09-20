@@ -92,13 +92,13 @@ public class Lexer {
         }
 
         @Override
-        public String currentLexeme() {
+        public String lexeme() {
             return buffer.toString();
         }
 
         @Override
         public void emit(Type type) {
-            emitted = new Token(type, currentLexeme());
+            emitted = new Token(type, lexeme());
             clear();
         }
 
