@@ -46,8 +46,10 @@ public final class Keywords {
             Map.entry("throws", Type.KEYWORD_THROWS),
             Map.entry("try", Type.KEYWORD_TRY),
             Map.entry("void", Type.KEYWORD_VOID),
-            Map.entry("while", Type.KEYWORD_WHILE),
-            // Literals (often modeled as tokens too)
+            Map.entry("while", Type.KEYWORD_WHILE)
+    );
+
+    private static final Map<String, Type> CONSTANT_LITERALS = Map.ofEntries(
             Map.entry("true", Type.LITERAL_TRUE),
             Map.entry("false", Type.LITERAL_FALSE),
             Map.entry("null", Type.LITERAL_NULL)
@@ -57,10 +59,13 @@ public final class Keywords {
     }
 
     public static Type resolve(String lexeme) {
+        if (CONSTANT_LITERALS.containsKey(lexeme)) {
+            return CONSTANT_LITERALS.get(lexeme);
+        }
         return ALL.getOrDefault(lexeme, Type.IDENTIFIER);
     }
 
-    public static boolean isKeyword(String lexeme) {
-        return ALL.containsKey(lexeme);
+    public static boolean contains(String lexeme) {
+        return ALL.containsKey(lexeme) || CONSTANT_LITERALS.containsKey(lexeme);
     }
 }
