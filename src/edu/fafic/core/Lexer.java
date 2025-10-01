@@ -51,7 +51,7 @@ public class Lexer {
 
         @Override
         public void unread(int ch) {
-            if (ch == Alphabet.EOF) return;
+            if (Alphabet.isEOF(ch)) return;
 
             try {
                 reader.unread(ch);
@@ -63,7 +63,7 @@ public class Lexer {
         @Override
         public int peek() {
             int ch = read();
-            if (ch != Alphabet.EOF) unread(ch);
+            if (!Alphabet.isEOF(ch)) unread(ch);
             return ch;
         }
 

@@ -1,7 +1,5 @@
 package edu.fafic.vocabulary;
 
-import java.util.Set;
-
 public final class Alphabet {
 
     public static final int EOF = -1;
@@ -61,19 +59,4 @@ public final class Alphabet {
         return ch == '\"';
     }
 
-    private static final Set<Character> OPERATORS = Set.of(
-            '+', '-', '*', '/', '%', '=', '&', '|', '^', '!', '<', '>', '~'
-    );
-
-    private static final Set<Character> PUNCTUATION = Set.of(
-            '(', ')', '{', '}', '[', ']', ';', ',', ':', '?', '@'
-    );
-
-    public static boolean isOperator(int ch) {
-        return OPERATORS.contains((char) ch);
-    }
-
-    public static boolean isPunctuation(int ch) {
-        return PUNCTUATION.contains((char) ch);
-    }
 }
