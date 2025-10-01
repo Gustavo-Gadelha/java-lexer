@@ -19,7 +19,7 @@ public enum States implements State {
                 return INITIAL;
             }
 
-            if (Punctuation.isKnown(ch)) {
+            if (Punctuation.contains(ch)) {
                 ctx.append(ch);
                 return PUNCTUATION;
             }
@@ -105,7 +105,7 @@ public enum States implements State {
                 return FLOAT_LITERAL;
             }
 
-            if (Alphabet.isWhitespace(ch) || Alphabet.isEOF(ch) || Punctuation.isKnown(ch)) {
+            if (Alphabet.isWhitespace(ch) || Alphabet.isEOF(ch) || Punctuation.contains(ch)) {
                 ctx.unread(ch);
                 ctx.emit(Type.LITERAL_INTEGER);
                 return FINAL;
@@ -123,7 +123,7 @@ public enum States implements State {
                 return FLOAT_LITERAL;
             }
 
-            if (Alphabet.isWhitespace(ch) || Alphabet.isEOF(ch) || Punctuation.isKnown(ch)) {
+            if (Alphabet.isWhitespace(ch) || Alphabet.isEOF(ch) || Punctuation.contains(ch)) {
                 ctx.unread(ch);
                 ctx.emit(Type.LITERAL_FLOAT);
                 return FINAL;

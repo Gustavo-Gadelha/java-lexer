@@ -27,7 +27,7 @@ public final class Punctuation {
         return ALL.getOrDefault(lexeme.charAt(0), Type.IDENTIFIER);
     }
 
-    public static boolean isKnown(int ch) {
+    public static boolean contains(int ch) {
         return ALL.containsKey((char) ch);
     }
 }
