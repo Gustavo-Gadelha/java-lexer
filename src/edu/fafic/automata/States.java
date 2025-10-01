@@ -30,7 +30,7 @@ public enum States implements State {
             }
             if (Alphabet.isDigit(ch)) {
                 ctx.append(ch);
-                return INTEGER_LITERAL;
+                return NUMBER_LITERAL;
             }
             if (Alphabet.isSingleQuote(ch)) {
                 ctx.append(ch);
@@ -93,19 +93,36 @@ public enum States implements State {
         }
     },
 
-    INTEGER_LITERAL {
+    NUMBER_LITERAL {
         @Override
         public State accept(LexingContext ctx, int ch) {
+            if (Alphabet.isUnderline(ch)) {
+                return NUMBER_LITERAL;
+            }
             if (Alphabet.isDigit(ch)) {
                 ctx.append(ch);
-                return INTEGER_LITERAL;
+                return NUMBER_LITERAL;
             }
             if (Alphabet.isDecimalPoint(ch)) {
                 ctx.append(ch);
                 return DOUBLE_LITERAL;
             }
 
-
+            if (ch == 'l' || ch == 'L') {
+                ctx.append(ch);
+                ctx.emit(Type.LITERAL_LONG);
+                return FINAL;
+            }
+            if (ch == 'f' || ch == 'F') {
+                ctx.append(ch);
+                ctx.emit(Type.LITERAL_FLOAT);
+                return FINAL;
+            }
+            if (ch == 'd' || ch == 'D') {
+                ctx.append(ch);
+                ctx.emit(Type.LITERAL_DOUBLE);
+                return FINAL;
+            }
             if (Alphabet.isWhitespace(ch) || Alphabet.isEOF(ch) || Punctuation.contains(ch)) {
                 ctx.unread(ch);
                 ctx.emit(Type.LITERAL_INTEGER);
@@ -119,6 +136,9 @@ public enum States implements State {
     DOUBLE_LITERAL {
         @Override
         public State accept(LexingContext ctx, int ch) {
+            if (Alphabet.isUnderline(ch)) {
+                return NUMBER_LITERAL;
+            }
             if (Alphabet.isDigit(ch)) {
                 ctx.append(ch);
                 return DOUBLE_LITERAL;
