@@ -4,6 +4,7 @@ public enum Type {
 
     IDENTIFIER,
     LITERAL_INTEGER,
+    LITERAL_DOUBLE,
     LITERAL_FLOAT,
     LITERAL_STRING,
     LITERAL_CHAR,

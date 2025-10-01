@@ -102,8 +102,9 @@ public enum States implements State {
             }
             if (Alphabet.isDecimalPoint(ch)) {
                 ctx.append(ch);
-                return FLOAT_LITERAL;
+                return DOUBLE_LITERAL;
             }
+
 
             if (Alphabet.isWhitespace(ch) || Alphabet.isEOF(ch) || Punctuation.contains(ch)) {
                 ctx.unread(ch);
@@ -115,17 +116,17 @@ public enum States implements State {
         }
     },
 
-    FLOAT_LITERAL {
+    DOUBLE_LITERAL {
         @Override
         public State accept(LexingContext ctx, int ch) {
             if (Alphabet.isDigit(ch)) {
                 ctx.append(ch);
-                return FLOAT_LITERAL;
+                return DOUBLE_LITERAL;
             }
 
             if (Alphabet.isWhitespace(ch) || Alphabet.isEOF(ch) || Punctuation.contains(ch)) {
                 ctx.unread(ch);
-                ctx.emit(Type.LITERAL_FLOAT);
+                ctx.emit(Type.LITERAL_DOUBLE);
                 return FINAL;
             }
 
