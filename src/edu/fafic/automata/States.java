@@ -144,6 +144,16 @@ public enum States implements State {
                 return DOUBLE_LITERAL;
             }
 
+            if (ch == 'f' || ch == 'F') {
+                ctx.append(ch);
+                ctx.emit(Type.LITERAL_FLOAT);
+                return FINAL;
+            }
+            if (ch == 'd' || ch == 'D') {
+                ctx.append(ch);
+                ctx.emit(Type.LITERAL_DOUBLE);
+                return FINAL;
+            }
             if (Alphabet.isWhitespace(ch) || Alphabet.isEOF(ch) || Punctuation.contains(ch)) {
                 ctx.unread(ch);
                 ctx.emit(Type.LITERAL_DOUBLE);
