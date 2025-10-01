@@ -41,7 +41,7 @@ public enum States implements State {
                 return STRING_LITERAL;
             }
 
-            if (Operators.isEquals(ch)) {
+            if (Operators.isAssignment(ch)) {
                 ctx.append(ch);
                 return ASSIGNMENT;
             }
@@ -49,21 +49,21 @@ public enum States implements State {
                 ctx.append(ch);
                 return TERNARY;
             }
-            if (Operators.isArithmeticStart(ch)) {
+            if (Operators.isArithmetic(ch)) {
                 ctx.append(ch);
                 return ARITHMETIC;
             }
-            if (Operators.isLogicalStart(ch)) {
-                ctx.append(ch);
-                return LOGICAL;
-            }
-            if (Operators.isRelationalStart(ch)) {
+            if (Operators.isRelational(ch)) { // Order would be important here
                 ctx.append(ch);
                 return RELATIONAL;
             }
-            if (Operators.isBitwise(ch)) {
+            if (Operators.isBitwise(ch)) { // Order is important here
                 ctx.append(ch);
                 return BITWISE;
+            }
+            if (Operators.isLogical(ch)) { // Order is important here
+                ctx.append(ch);
+                return LOGICAL;
             }
 
             return INVALID;
@@ -207,10 +207,10 @@ public enum States implements State {
     ASSIGNMENT {
         @Override
         public State accept(LexingContext ctx, int ch) {
+            ctx.unread(ch);
+
             if (ch == '=') {
-                ctx.append(ch);
-            } else {
-                ctx.unread(ch);
+                return RELATIONAL;
             }
 
             ctx.emit(Operators.resolve(ctx.lexeme()));
@@ -239,7 +239,7 @@ public enum States implements State {
                 return BLOCK_COMMENT;
             }
 
-            if ((last == '+' && ch == '+') || (last == '-' && ch == '-') || (last == '-' && ch == '>') || ch == '=') {
+            if (ch == '=' || (last == '+' && ch == '+') || (last == '-' && ch == '-') || (last == '-' && ch == '>')) {
                 ctx.append(ch);
             } else {
                 ctx.unread(ch);
@@ -255,7 +255,12 @@ public enum States implements State {
         public State accept(LexingContext ctx, int ch) {
             int last = ctx.last();
 
-            if ((last == '&' && ch == '&') || (last == '|' && ch == '|') || (last == '!' && ch == '=')) {
+            if ((last == '!' && ch == '=')) {
+                ctx.append(ch);
+                return RELATIONAL;
+            }
+
+            if ((last == '&' && ch == '&') || (last == '|' && ch == '|')) {
                 ctx.append(ch);
             } else {
                 ctx.unread(ch);
@@ -283,7 +288,19 @@ public enum States implements State {
     BITWISE {
         @Override
         public State accept(LexingContext ctx, int ch) {
-            ctx.unread(ch);
+            int last = ctx.last();
+
+            if ((last == '&' && ch == '&') || (last == '|' && ch == '|')) {
+                ctx.unread(ch);
+                return LOGICAL;
+            }
+
+            if (ch == '=') {
+                ctx.append(ch);
+            } else {
+                ctx.unread(ch);
+            }
+
             ctx.emit(Operators.resolve(ctx.lexeme()));
             return FINAL;
         }

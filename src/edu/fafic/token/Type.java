@@ -71,6 +71,10 @@ public enum Type {
     BITWISE_OR,             // |
     BITWISE_XOR,            // ^
     BITWISE_NOT,            // ~
+    BITWISE_AND_EQUALS,     // &=
+    BITWISE_OR_EQUALS,      // |=
+    BITWISE_XOR_EQUALS,     // ^=
+    BITWISE_NOT_EQUALS,     // ~=
 
     ADD,                    // +
     SUB,                    // -

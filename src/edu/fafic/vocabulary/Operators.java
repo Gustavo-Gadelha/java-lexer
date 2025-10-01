@@ -11,20 +11,20 @@ public final class Operators {
 
     public static final Character TERNARY = '?';
 
-    public static final Set<Character> ARITHMETIC_START = Set.of(
+    public static final Set<Character> ARITHMETIC = Set.of(
             '+', '-', '*', '/', '%'
     );
 
-    public static final Set<Character> LOGICAL_START = Set.of(
+    public static final Set<Character> LOGICAL = Set.of(
             '&', '|', '!'
     );
 
-    public static final Set<Character> RELATIONAL_START = Set.of(
+    public static final Set<Character> RELATIONAL = Set.of(
             '>', '<'
     );
 
-    public static final Set<Character> BITWISE_ONLY = Set.of(
-            '^', '~'
+    public static final Set<Character> BITWISE = Set.of(
+            '&', '|', '^', '~'
     );
 
     private static final Map<String, Type> ALL = Map.ofEntries(
@@ -48,6 +48,10 @@ public final class Operators {
             Map.entry("|", Type.BITWISE_OR),
             Map.entry("^", Type.BITWISE_XOR),
             Map.entry("~", Type.BITWISE_NOT),
+            Map.entry("&=", Type.BITWISE_AND_EQUALS),
+            Map.entry("|=", Type.BITWISE_OR_EQUALS),
+            Map.entry("^=", Type.BITWISE_XOR_EQUALS),
+            Map.entry("~=", Type.BITWISE_NOT_EQUALS),
             // Arithmetic operators
             Map.entry("+", Type.ADD),
             Map.entry("-", Type.SUB),
@@ -74,7 +78,7 @@ public final class Operators {
         return ALL.getOrDefault(lexeme, Type.INVALID);
     }
 
-    public static boolean isEquals(int ch) {
+    public static boolean isAssignment(int ch) {
         return ch == EQUALS;
     }
 
@@ -82,23 +86,19 @@ public final class Operators {
         return ch == TERNARY;
     }
 
-    public static boolean isArithmeticStart(int ch) {
-        return ARITHMETIC_START.contains((char) ch);
+    public static boolean isArithmetic(int ch) {
+        return ARITHMETIC.contains((char) ch);
     }
 
-    public static boolean isLogicalStart(int ch) {
-        return LOGICAL_START.contains((char) ch);
+    public static boolean isLogical(int ch) {
+        return LOGICAL.contains((char) ch);
     }
 
-    public static boolean isRelationalStart(int ch) {
-        return RELATIONAL_START.contains((char) ch);
+    public static boolean isRelational(int ch) {
+        return RELATIONAL.contains((char) ch);
     }
 
     public static boolean isBitwise(int ch) {
-        return BITWISE_ONLY.contains((char) ch);
-    }
-
-    public static boolean isKnown(String lexeme) {
-        return ALL.containsKey(lexeme);
+        return BITWISE.contains((char) ch);
     }
 }
