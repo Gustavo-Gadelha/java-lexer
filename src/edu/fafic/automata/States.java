@@ -1,35 +1,36 @@
 package edu.fafic.automata;
 
+import edu.fafic.core.LexingContext;
+import edu.fafic.exception.LexicalException;
 import edu.fafic.token.Type;
 import edu.fafic.vocabulary.Alphabet;
-import edu.fafic.vocabulary.Symbols;
+import edu.fafic.vocabulary.Keywords;
+import edu.fafic.vocabulary.Operators;
+import edu.fafic.vocabulary.Punctuation;
 
 public enum States implements State {
     INITIAL {
         @Override
-        public State accept(StateContext ctx, int ch) {
-            if (Symbols.isEOF(ch)) {
+        public State accept(LexingContext ctx, int ch) {
+            if (Alphabet.isEOF(ch)) {
                 return EOF;
             }
-            if (Symbols.isWhitespace(ch)) {
+            if (Alphabet.isWhitespace(ch)) {
                 return INITIAL;
             }
 
-            if (Symbols.isPunctuation(ch)) {
+            if (Punctuation.contains(ch)) {
                 ctx.append(ch);
                 return PUNCTUATION;
             }
-            if (Symbols.isAssignment(ch)) {
-                ctx.append(ch);
-                return ASSIGNMENT;
-            }
-            if (Alphabet.isLetter(ch) || Alphabet.isUnderline(ch)) {
+
+            if (Alphabet.isIdentifierStart(ch)) {
                 ctx.append(ch);
                 return KEYWORD_OR_IDENTIFIER;
             }
             if (Alphabet.isDigit(ch)) {
                 ctx.append(ch);
-                return INTEGER_LITERAL;
+                return NUMBER_LITERAL;
             }
             if (Alphabet.isSingleQuote(ch)) {
                 ctx.append(ch);
@@ -39,56 +40,92 @@ public enum States implements State {
                 ctx.append(ch);
                 return STRING_LITERAL;
             }
-            if (Symbols.isLogical(ch)) {
+
+            if (Operators.isAssignment(ch)) {
                 ctx.append(ch);
-                return LOGICAL;
+                return ASSIGNMENT;
             }
-            if (Symbols.isRelational(ch)) {
+            if (Operators.isTernary(ch)) {
                 ctx.append(ch);
-                return RELATIONAL;
+                return TERNARY;
             }
-            if (Symbols.isArithmetic(ch)) {
+            if (Operators.isArithmetic(ch)) {
                 ctx.append(ch);
                 return ARITHMETIC;
             }
-            if (Symbols.isTernary(ch)) {
+            if (Operators.isRelational(ch)) { // Order would be important here
                 ctx.append(ch);
-                return TERNARY;
+                return RELATIONAL;
+            }
+            if (Operators.isBitwise(ch)) { // Order is important here
+                ctx.append(ch);
+                return BITWISE;
+            }
+            if (Operators.isLogical(ch)) { // Order is important here
+                ctx.append(ch);
+                return LOGICAL;
             }
 
             return INVALID;
         }
     },
 
-    ASSIGNMENT {
+    PUNCTUATION {
         @Override
-        public State accept(StateContext ctx, int ch) {
-            if (ch == '=') {
-                ctx.append(ch);
-                return RELATIONAL;
-            }
-
+        public State accept(LexingContext ctx, int ch) {
             ctx.unread(ch);
-            ctx.emit(Type.AS);
+            ctx.emit(Punctuation.resolve(ctx.lexeme()));
             return FINAL;
         }
     },
 
     KEYWORD_OR_IDENTIFIER {
         @Override
-        public State accept(StateContext ctx, int ch) {
-            if (Alphabet.isLetter(ch) || Alphabet.isDigit(ch) || Alphabet.isUnderline(ch)) {
+        public State accept(LexingContext ctx, int ch) {
+            if (Alphabet.isIdentifierPart(ch)) {
                 ctx.append(ch);
                 return KEYWORD_OR_IDENTIFIER;
             }
 
-            Type type = Symbols.isKeyword(ctx.currentLexeme())
-                    ? Type.KEYWORD
-                    : Type.ID;
+            ctx.unread(ch);
+            ctx.emit(Keywords.resolve(ctx.lexeme()));
+            return FINAL;
+        }
+    },
 
-            if (Symbols.isTerminator(ch) || Symbols.isPunctuation(ch)) {
+    NUMBER_LITERAL {
+        @Override
+        public State accept(LexingContext ctx, int ch) {
+            if (Alphabet.isUnderline(ch)) {
+                return NUMBER_LITERAL;
+            }
+            if (Alphabet.isDigit(ch)) {
+                ctx.append(ch);
+                return NUMBER_LITERAL;
+            }
+            if (Alphabet.isDecimalPoint(ch)) {
+                ctx.append(ch);
+                return DOUBLE_LITERAL;
+            }
+
+            if (ch == 'l' || ch == 'L') {
+                ctx.append(ch);
+                ctx.emit(Type.LITERAL_LONG);
+                return FINAL;
+            }
+            if (ch == 'f' || ch == 'F') {
+                ctx.append(ch);
+                ctx.emit(Type.LITERAL_FLOAT);
+                return FINAL;
+            }
+            if (ch == 'd' || ch == 'D') {
+                ctx.append(ch);
+                ctx.emit(Type.LITERAL_DOUBLE);
+                return FINAL;
+            }
+            if (Alphabet.isWhitespace(ch) || Alphabet.isEOF(ch) || Punctuation.contains(ch)) {
                 ctx.unread(ch);
-                ctx.emit(type);
+                ctx.emit(Type.LITERAL_INTEGER);
                 return FINAL;
             }
 
@@ -96,37 +133,30 @@ public enum States implements State {
         }
     },
 
-    INTEGER_LITERAL {
+    DOUBLE_LITERAL {
         @Override
-        public State accept(StateContext ctx, int ch) {
+        public State accept(LexingContext ctx, int ch) {
+            if (Alphabet.isUnderline(ch)) {
+                return NUMBER_LITERAL;
+            }
             if (Alphabet.isDigit(ch)) {
                 ctx.append(ch);
-                return INTEGER_LITERAL;
+                return DOUBLE_LITERAL;
             }
-            if (Alphabet.isDecimalSeparator(ch)) {
+
+            if (ch == 'f' || ch == 'F') {
                 ctx.append(ch);
-                return FLOAT_LITERAL;
-            }
-            if (Symbols.isTerminator(ch)) {
-                ctx.unread(ch);
-                ctx.emit(Type.INTEGER_LITERAL);
+                ctx.emit(Type.LITERAL_FLOAT);
                 return FINAL;
             }
-
-            return INVALID;
-        }
-    },
-
-    FLOAT_LITERAL {
-        @Override
-        public State accept(StateContext ctx, int ch) {
-            if (Alphabet.isDigit(ch)) {
+            if (ch == 'd' || ch == 'D') {
                 ctx.append(ch);
-                return FLOAT_LITERAL;
+                ctx.emit(Type.LITERAL_DOUBLE);
+                return FINAL;
             }
-            if (Symbols.isTerminator(ch)) {
+            if (Alphabet.isWhitespace(ch) || Alphabet.isEOF(ch) || Punctuation.contains(ch)) {
                 ctx.unread(ch);
-                ctx.emit(Type.FLOAT_LITERAL);
+                ctx.emit(Type.LITERAL_DOUBLE);
                 return FINAL;
             }
 
@@ -136,47 +166,67 @@ public enum States implements State {
 
     COMMENT {
         @Override
-        public State accept(StateContext ctx, int ch) {
-            if (Alphabet.isLineSeparator(ch) || Symbols.isEOF(ch)) {
-                ctx.emit(Type.COMMENT);
-                return FINAL;
+        public State accept(LexingContext ctx, int ch) {
+            if (Alphabet.isNewline(ch)) {
+                ctx.clear();
+                return INITIAL;
+            }
+            if (Alphabet.isEOF(ch)) {
+                return EOF;
             }
 
-            ctx.append(ch);
             return COMMENT;
         }
     },
 
     BLOCK_COMMENT {
         @Override
-        public State accept(StateContext ctx, int ch) {
-            if (Symbols.isEOF(ch)) {
+        public State accept(LexingContext ctx, int ch) {
+            if (ch == '*' && ctx.peek() == '/') {
+                ctx.read();
+                ctx.clear();
+                return INITIAL;
+            }
+            if (Alphabet.isEOF(ch)) {
                 return INVALID;
             }
 
-            int last = ctx.last();
+            return BLOCK_COMMENT;
+        }
+    },
 
-            if (last == '*' && ch == '/') {
-                ctx.append(ch);
-                ctx.emit(Type.COMMENT);
+    CHARACTER_LITERAL {
+        @Override
+        public State accept(LexingContext ctx, int ch) {
+            ctx.append(ch);
+
+            if (Alphabet.isSingleQuote(ch)) {
+                ctx.emit(Type.LITERAL_CHAR);
                 return FINAL;
             }
 
-            ctx.append(ch);
-            return BLOCK_COMMENT;
+            int next = ctx.read();
+
+            if (Alphabet.isSingleQuote(next)) {
+                ctx.append(next);
+                ctx.emit(Type.LITERAL_CHAR);
+                return FINAL;
+            }
+
+            return INVALID;
         }
     },
 
     STRING_LITERAL {
         @Override
-        public State accept(StateContext ctx, int ch) {
-            if (Symbols.isEOF(ch)) {
+        public State accept(LexingContext ctx, int ch) {
+            if (Alphabet.isNewline(ch) || Alphabet.isEOF(ch)) {
                 return INVALID;
             }
 
             if (Alphabet.isDoubleQuote(ch)) {
                 ctx.append(ch);
-                ctx.emit(Type.STRING_LITERAL);
+                ctx.emit(Type.LITERAL_STRING);
                 return FINAL;
             }
 
@@ -185,140 +235,133 @@ public enum States implements State {
         }
     },
 
-    CHARACTER_LITERAL {
+    ASSIGNMENT {
         @Override
-        public State accept(StateContext ctx, int ch) {
-            if (Alphabet.isLineSeparator(ch) || Symbols.isEOF(ch)) {
-                return INVALID;
-            }
-
-            int last = ctx.last();
-
-            if (last != '\\' && ch == '\\') {
-                ctx.append(ch);
-                return CHARACTER_LITERAL;
-            }
-
-            ctx.append(ch);
-            return CHARACTER_LITERAL_END;
-        }
-    },
-
-    CHARACTER_LITERAL_END {
-        @Override
-        public State accept(StateContext ctx, int ch) {
-            if (Alphabet.isSingleQuote(ch)) {
-                ctx.append(ch);
-                ctx.emit(Type.CHARACTER_LITERAL);
-                return FINAL;
-            }
-
-            return INVALID;
-        }
-    },
-
-    LOGICAL {
-        @Override
-        public State accept(StateContext ctx, int ch) {
-            int last = ctx.last();
-
-            if (last == '!') {
-                if (ch == '=') {
-                    ctx.append(ch);
-                    return RELATIONAL;
-                }
-                ctx.unread(ch);
-                ctx.emit(Type.LOGICAL);
-                return FINAL;
-            }
-
-            if (ch == last) {
-                ctx.append(ch);
-                ctx.emit(Type.LOGICAL);
-                return FINAL;
-            }
-
-            return INVALID;
-        }
-    },
-
-    RELATIONAL {
-        @Override
-        public State accept(StateContext ctx, int ch) {
-            int last = ctx.last();
-
-            if (last == '<' && ch == '=' || last == '>' && ch == '=') {
-                ctx.append(ch);
-                ctx.emit(Type.RELATIONAL);
-                return FINAL;
-            }
-
+        public State accept(LexingContext ctx, int ch) {
             ctx.unread(ch);
-            ctx.emit(Type.RELATIONAL);
-            return FINAL;
-        }
-    },
 
-    ARITHMETIC {
-        @Override
-        public State accept(StateContext ctx, int ch) {
-            int last = ctx.last();
-
-            if (last == '/') {
-                if (ch == '/') {
-                    ctx.append(ch);
-                    return COMMENT;
-                }
-                if (ch == '*') {
-                    ctx.append(ch);
-                    return BLOCK_COMMENT;
-                }
+            if (ch == '=') {
+                return RELATIONAL;
             }
 
-            ctx.unread(ch);
-            ctx.emit(Type.ARITHMETIC);
-            return FINAL;
-        }
-    },
-
-    PUNCTUATION {
-        @Override
-        public State accept(StateContext ctx, int ch) {
-            ctx.unread(ch);
-            ctx.emit(Type.PUNCTUATION);
+            ctx.emit(Operators.resolve(ctx.lexeme()));
             return FINAL;
         }
     },
 
     TERNARY {
         @Override
-        public State accept(StateContext ctx, int ch) {
+        public State accept(LexingContext ctx, int ch) {
             ctx.unread(ch);
             ctx.emit(Type.TERNARY);
             return FINAL;
         }
     },
 
+    ARITHMETIC {
+        @Override
+        public State accept(LexingContext ctx, int ch) {
+            int last = ctx.last();
+
+            if (last == '/' && ch == '/') {
+                return COMMENT;
+            }
+            if (last == '/' && ch == '*') {
+                return BLOCK_COMMENT;
+            }
+
+            if (ch == '=' || (last == '+' && ch == '+') || (last == '-' && ch == '-') || (last == '-' && ch == '>')) {
+                ctx.append(ch);
+            } else {
+                ctx.unread(ch);
+            }
+
+            ctx.emit(Operators.resolve(ctx.lexeme()));
+            return FINAL;
+        }
+    },
+
+    LOGICAL {
+        @Override
+        public State accept(LexingContext ctx, int ch) {
+            int last = ctx.last();
+
+            if ((last == '!' && ch == '=')) {
+                ctx.append(ch);
+                return RELATIONAL;
+            }
+
+            if ((last == '&' && ch == '&') || (last == '|' && ch == '|')) {
+                ctx.append(ch);
+            } else {
+                ctx.unread(ch);
+            }
+
+            ctx.emit(Operators.resolve(ctx.lexeme()));
+            return FINAL;
+        }
+    },
+
+    RELATIONAL {
+        @Override
+        public State accept(LexingContext ctx, int ch) {
+            if (ch == '=') {
+                ctx.append(ch);
+            } else {
+                ctx.unread(ch);
+            }
+
+            ctx.emit(Operators.resolve(ctx.lexeme()));
+            return FINAL;
+        }
+    },
+
+    BITWISE {
+        @Override
+        public State accept(LexingContext ctx, int ch) {
+            int last = ctx.last();
+
+            if ((last == '&' && ch == '&') || (last == '|' && ch == '|')) {
+                ctx.unread(ch);
+                return LOGICAL;
+            }
+
+            if (ch == '=') {
+                ctx.append(ch);
+            } else {
+                ctx.unread(ch);
+            }
+
+            ctx.emit(Operators.resolve(ctx.lexeme()));
+            return FINAL;
+        }
+    },
+
     EOF {
         @Override
-        public State accept(StateContext ctx, int ch) {
+        public State accept(LexingContext ctx, int ch) {
             ctx.emit(Type.EOF);
             return FINAL;
         }
     },
 
-    FINAL,
+    FINAL {
+        @Override
+        public State accept(LexingContext ctx, int ch) {
+            throw new LexicalException("O Lexer tentou executar o estado final");
+        }
+    },
 
     INVALID {
         @Override
-        public State accept(StateContext ctx, int ch) {
-            // TODO: Implementar um log de erros mais detalhado com LexicalException
-            throw new RuntimeException("O analisador léxico chegou em um estado inválido");
+        public State accept(LexingContext ctx, int ch) {
+            ctx.error("O analisador léxico chegou em um estado inválido lendo: %s".formatted((char) ctx.last()));
+            return FINAL;
         }
     };
 
     @Override
-    public State accept(StateContext ctx, int ch) {
+    public State accept(LexingContext ctx, int ch) {
         return INVALID;
     }
 }

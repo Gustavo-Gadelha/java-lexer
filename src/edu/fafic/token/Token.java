@@ -8,6 +8,6 @@ public record Token(Type type, String lexeme) {
 
     @Override
     public String toString() {
-        return "<%s, %s>".formatted(type, lexeme);
+        return "<{ %s, %s }>".formatted(type, lexeme);
     }
 }
